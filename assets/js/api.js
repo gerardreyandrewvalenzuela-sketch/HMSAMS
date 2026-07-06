@@ -53,9 +53,11 @@ async function apiPost(action, body) {
 }
 
 // ── PIN ──────────────────────────────────────────────────────
+// PIN is verified locally — no API call needed
+var CORRECT_PIN = 'HMsociety2026';
+
 async function verifyPin(pin) {
-  var res = await apiGet('verifyPin', { pin: pin });
-  return res.success === true;
+  return pin === CORRECT_PIN;
 }
 
 // ── Students ─────────────────────────────────────────────────
@@ -118,35 +120,28 @@ async function initSheets() {
 }
 
 // ── PIN Gate helper (used by all protected pages) ────────────
-// Call this at the top of any page that needs PIN
+// PIN is checked once per browser session and remembered in sessionStorage
 function setupPinGate(onUnlocked) {
   var overlay   = document.getElementById('pin-overlay');
   var pinInput  = document.getElementById('pin-input');
   var pinSubmit = document.getElementById('pin-submit');
   var pinError  = document.getElementById('pin-error');
 
-  // If already unlocked this session, skip overlay
-  if (_pin) {
-    verifyPin(_pin).then(function(valid) {
-      if (valid) {
-        overlay.style.display = 'none';
-        onUnlocked();
-      } else {
-        clearPin();
-      }
-    });
+  // Already unlocked this session — skip the overlay entirely
+  if (_pin && _pin === CORRECT_PIN) {
+    overlay.style.display = 'none';
+    onUnlocked();
     return;
   }
 
-  async function attemptUnlock() {
+  // Show overlay and wait for correct PIN
+  overlay.style.display = 'flex';
+
+  function attemptUnlock() {
     var entered = pinInput.value.trim();
     if (!entered) { pinError.textContent = 'Please enter the PIN.'; return; }
 
-    pinSubmit.disabled = true;
-    pinError.textContent = '';
-
-    var valid = await verifyPin(entered);
-    if (valid) {
+    if (entered === CORRECT_PIN) {
       setPin(entered);
       overlay.style.display = 'none';
       onUnlocked();
@@ -155,13 +150,15 @@ function setupPinGate(onUnlocked) {
       pinInput.value = '';
       pinInput.focus();
     }
-    pinSubmit.disabled = false;
   }
 
   pinSubmit.addEventListener('click', attemptUnlock);
   pinInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') attemptUnlock();
   });
+
+  // Focus input automatically
+  setTimeout(function() { pinInput.focus(); }, 100);
 }
 
 // ── Utility: show toast notification ────────────────────────
