@@ -91,46 +91,60 @@ function buildQRItem(student) {
   ].filter(Boolean).join(' ');
 
   var studentNo = String(student['Student No']);
+  var yearLevel = student['Year Level'] ? student['Year Level'] + (
+    student['Year Level'] == 1 ? 'st' :
+    student['Year Level'] == 2 ? 'nd' :
+    student['Year Level'] == 3 ? 'rd' : 'th'
+  ) + ' Year' : '';
+  var block = student['Block'] ? 'Block ' + student['Block'] : '';
 
   // Build the QR scan URL
   var url = QR_BASE_URL +
     '?id='   + encodeURIComponent(studentNo) +
     '&name=' + encodeURIComponent(fullName);
 
-  // Build item container
+  // Build ID card container
   var item = document.createElement('div');
   item.className = 'qr-item';
 
-  // QR container
+  // Left — QR code
   var qrDiv = document.createElement('div');
   qrDiv.className = 'qr-item__qr';
 
-  // Name and number
-  var nameEl = document.createElement('div');
-  nameEl.className = 'qr-item__name';
-  nameEl.textContent = fullName;
-
-  var noEl = document.createElement('div');
-  noEl.className = 'qr-item__no';
-  noEl.textContent = studentNo + ' | ' + (student['Year Level'] || '') + (student['Block'] || '');
+  // Right — student details
+  var details = document.createElement('div');
+  details.className = 'qr-item__details';
+  details.innerHTML =
+    '<div class="qr-item__name">' + escHtml(fullName) + '</div>' +
+    '<div class="qr-item__no">' + escHtml(studentNo) + '</div>' +
+    '<div class="qr-item__meta">' + escHtml([yearLevel, block].filter(Boolean).join(' — ')) + '</div>' +
+    '<div class="qr-item__org">Hospitality Management Society</div>';
 
   item.appendChild(qrDiv);
-  item.appendChild(nameEl);
-  item.appendChild(noEl);
+  item.appendChild(details);
 
-  // Generate QR code using qrcode.js
+  // Generate QR code
   try {
     new QRCode(qrDiv, {
-      text:          url,
-      width:         140,
-      height:        140,
-      colorDark:     '#1e293b',
-      colorLight:    '#ffffff',
-      correctLevel:  QRCode.CorrectLevel.M
+      text:         url,
+      width:        90,
+      height:       90,
+      colorDark:    '#1e293b',
+      colorLight:   '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
     });
   } catch(e) {
     qrDiv.textContent = 'QR error';
   }
 
   return item;
+}
+
+// Escape HTML helper
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }

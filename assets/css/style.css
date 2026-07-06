@@ -563,27 +563,67 @@ img { max-width: 100%; }
 
 /* ── QR Grid ────────────────────────────────────────────────── */
 .qr-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding-bottom: 8px;
 }
 .qr-item {
   background: var(--clr-surface);
   border-radius: var(--radius);
-  padding: 14px 12px;
-  text-align: center;
-  border: 1px solid var(--clr-border);
+  border: 1.5px solid var(--clr-border);
   box-shadow: var(--shadow-sm);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  padding: 10px 14px;
+  gap: 14px;
+  max-width: 420px;
+  width: 100%;
 }
-.qr-item__qr { line-height: 0; }
-.qr-item__qr canvas, .qr-item__qr img { border-radius: 4px; }
-.qr-item__name { font-size: .82rem; font-weight: 700; line-height: 1.3; }
-.qr-item__no   { font-size: .75rem; color: var(--clr-text-muted); }
+.qr-item__qr {
+  flex-shrink: 0;
+  line-height: 0;
+  border-right: 1.5px solid var(--clr-border);
+  padding-right: 14px;
+}
+.qr-item__qr canvas,
+.qr-item__qr img {
+  border-radius: 4px;
+  display: block;
+}
+.qr-item__details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.qr-item__name {
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--clr-text);
+}
+.qr-item__no {
+  font-size: .8rem;
+  color: var(--clr-text-muted);
+  font-weight: 600;
+}
+.qr-item__meta {
+  font-size: .75rem;
+  color: var(--clr-text-light);
+  margin-top: 2px;
+}
+.qr-item__org {
+  font-size: .7rem;
+  color: var(--clr-text-light);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-top: 4px;
+  border-top: 1px solid var(--clr-border);
+  padding-top: 4px;
+}
 
 /* ── Alerts ─────────────────────────────────────────────────── */
 .alert {
@@ -647,9 +687,31 @@ img { max-width: 100%; }
   .no-print, .bottom-nav, .top-bar, .filter-row,
   .btn, #pin-overlay { display: none !important; }
   body { background: #fff; padding: 0; }
-  .qr-grid { gap: 24px; }
-  .qr-item { break-inside: avoid; border: 1px solid #ccc; }
   .page-content { padding: 0; max-width: 100%; }
+
+  /* Print QR cards in a 2-column grid */
+  .qr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .qr-item {
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    padding: 8px 10px;
+    gap: 10px;
+    break-inside: avoid;
+    max-width: 100%;
+    box-shadow: none;
+  }
+  .qr-item__qr {
+    border-right: 1px solid #ccc;
+    padding-right: 10px;
+  }
+  .qr-item__name { font-size: .85rem; }
+  .qr-item__no   { font-size: .75rem; }
+  .qr-item__meta { font-size: .7rem; }
+  .qr-item__org  { font-size: .65rem; }
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
