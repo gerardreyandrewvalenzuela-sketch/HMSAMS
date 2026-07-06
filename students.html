@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMSAMS — Students</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="top-bar">
+    <div class="top-bar__brand">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>HMSAMS</span>
+    </div>
+    <span class="top-bar__subtitle">Student Management</span>
+  </header>
+
+  <!-- PIN Gate Overlay -->
+  <div class="overlay" id="pin-overlay">
+    <div class="pin-card">
+      <div class="pin-card__icon"><i class="fa-solid fa-lock"></i></div>
+      <h2>Officer Access</h2>
+      <p>Enter PIN to continue</p>
+      <input type="password" id="pin-input" class="input" placeholder="Enter PIN" maxlength="20" autocomplete="off" />
+      <div class="pin-card__error" id="pin-error"></div>
+      <button class="btn btn--primary btn--full mt-sm" id="pin-submit">
+        <i class="fa-solid fa-unlock"></i> Unlock
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content" id="main-content" style="display:none;">
+
+    <div class="page-header">
+      <h1 class="page-title">Students</h1>
+      <button class="btn btn--primary" id="btn-add-student">
+        <i class="fa-solid fa-plus"></i> Add
+      </button>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="search-bar">
+      <div class="search-bar__input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" class="input search-bar__input" placeholder="Search by name or student no." />
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <select id="filter-year" class="input input--sm">
+        <option value="">All Year Levels</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+      </select>
+      <select id="filter-block" class="input input--sm">
+        <option value="">All Blocks</option>
+      </select>
+      <select id="filter-status" class="input input--sm">
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+
+    <!-- Student Count -->
+    <div class="list-meta" id="student-count">Loading...</div>
+
+    <!-- Students Table -->
+    <div class="table-wrap">
+      <table class="table" id="students-table">
+        <thead>
+          <tr>
+            <th>Student No.</th>
+            <th>Last Name</th>
+            <th>First Name</th>
+            <th>Yr</th>
+            <th>Block</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="students-tbody">
+          <tr><td colspan="7" class="text-center text-muted">Loading students...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Add / Edit Student Modal -->
+  <div class="modal-overlay" id="student-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 id="student-modal-title">Add Student</h2>
+        <button class="btn btn--ghost btn--icon" id="student-modal-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal__body">
+        <input type="hidden" id="edit-student-original-no" />
+
+        <label class="form-label">Student No. <span class="required">*</span></label>
+        <input type="text" id="student-no" class="input" placeholder="e.g. 2024-0001" />
+
+        <div class="form-row mt-sm">
+          <div>
+            <label class="form-label">Last Name <span class="required">*</span></label>
+            <input type="text" id="student-lastname" class="input" placeholder="Last Name" />
+          </div>
+          <div>
+            <label class="form-label">First Name <span class="required">*</span></label>
+            <input type="text" id="student-firstname" class="input" placeholder="First Name" />
+          </div>
+        </div>
+
+        <label class="form-label mt-sm">Middle Name</label>
+        <input type="text" id="student-middlename" class="input" placeholder="Middle Name (optional)" />
+
+        <div class="form-row mt-sm">
+          <div>
+            <label class="form-label">Year Level <span class="required">*</span></label>
+            <select id="student-year" class="input">
+              <option value="">Select</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Block <span class="required">*</span></label>
+            <input type="text" id="student-block" class="input" placeholder="e.g. A" />
+          </div>
+        </div>
+
+        <label class="form-label mt-sm">Status</label>
+        <select id="student-status" class="input">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+
+        <div class="form-error" id="student-form-error"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="student-modal-cancel">Cancel</button>
+        <button class="btn btn--primary" id="student-modal-save">
+          <i class="fa-solid fa-floppy-disk"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Remove Modal -->
+  <div class="modal-overlay" id="confirm-modal" style="display:none;">
+    <div class="modal modal--sm">
+      <div class="modal__header">
+        <h2>Confirm Remove</h2>
+      </div>
+      <div class="modal__body">
+        <p id="confirm-message">Remove this student from the list?</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--danger" id="confirm-ok">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="bottom-nav__item">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </a>
+    <a href="scan.html" class="bottom-nav__item">
+      <i class="fa-solid fa-qrcode"></i><span>Scan</span>
+    </a>
+    <a href="events.html" class="bottom-nav__item">
+      <i class="fa-solid fa-calendar"></i><span>Events</span>
+    </a>
+    <a href="students.html" class="bottom-nav__item bottom-nav__item--active">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+    <a href="qr.html" class="bottom-nav__item">
+      <i class="fa-solid fa-print"></i><span>QR</span>
+    </a>
+  </nav>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/students.js"></script>
+</body>
+</html>

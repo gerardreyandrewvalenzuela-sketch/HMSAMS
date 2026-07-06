@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMSAMS — Events</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="top-bar">
+    <div class="top-bar__brand">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>HMSAMS</span>
+    </div>
+    <span class="top-bar__subtitle">Event Management</span>
+  </header>
+
+  <!-- PIN Gate Overlay -->
+  <div class="overlay" id="pin-overlay">
+    <div class="pin-card">
+      <div class="pin-card__icon"><i class="fa-solid fa-lock"></i></div>
+      <h2>Officer Access</h2>
+      <p>Enter PIN to continue</p>
+      <input type="password" id="pin-input" class="input" placeholder="Enter PIN" maxlength="20" autocomplete="off" />
+      <div class="pin-card__error" id="pin-error"></div>
+      <button class="btn btn--primary btn--full mt-sm" id="pin-submit">
+        <i class="fa-solid fa-unlock"></i> Unlock
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content" id="main-content" style="display:none;">
+
+    <div class="page-header">
+      <h1 class="page-title">Events</h1>
+      <button class="btn btn--primary" id="btn-new-event">
+        <i class="fa-solid fa-plus"></i> New Event
+      </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="tab-bar">
+      <button class="tab-bar__item tab-bar__item--active" data-filter="all">All</button>
+      <button class="tab-bar__item" data-filter="Active">Active</button>
+      <button class="tab-bar__item" data-filter="Inactive">Inactive</button>
+      <button class="tab-bar__item" data-filter="Archived">Archived</button>
+    </div>
+
+    <!-- Events List -->
+    <div id="events-list" class="card-list">
+      <div class="empty-state" id="events-empty" style="display:none;">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>No events found.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- New / Edit Event Modal -->
+  <div class="modal-overlay" id="event-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 id="modal-title">New Event</h2>
+        <button class="btn btn--ghost btn--icon" id="modal-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal__body">
+        <input type="hidden" id="edit-event-id" />
+
+        <label class="form-label">Event Name <span class="required">*</span></label>
+        <input type="text" id="event-name" class="input" placeholder="e.g. Sportsfest 2026" />
+
+        <label class="form-label mt-sm">Date <span class="required">*</span></label>
+        <input type="date" id="event-date" class="input" />
+
+        <label class="form-label mt-sm">Registration Open <span class="required">*</span></label>
+        <input type="time" id="event-reg-open" class="input" />
+
+        <label class="form-label mt-sm">Registration Close (Late after this) <span class="required">*</span></label>
+        <input type="time" id="event-reg-close" class="input" />
+
+        <label class="form-label mt-sm">Timeout Deadline <span class="required">*</span></label>
+        <input type="time" id="event-timeout" class="input" />
+
+        <div class="form-error" id="event-form-error"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="modal-cancel">Cancel</button>
+        <button class="btn btn--primary" id="modal-save">
+          <i class="fa-solid fa-floppy-disk"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="modal-overlay" id="confirm-modal" style="display:none;">
+    <div class="modal modal--sm">
+      <div class="modal__header">
+        <h2>Confirm Delete</h2>
+      </div>
+      <div class="modal__body">
+        <p id="confirm-message">Are you sure you want to delete this event?</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--danger" id="confirm-ok">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="bottom-nav__item">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </a>
+    <a href="scan.html" class="bottom-nav__item">
+      <i class="fa-solid fa-qrcode"></i><span>Scan</span>
+    </a>
+    <a href="events.html" class="bottom-nav__item bottom-nav__item--active">
+      <i class="fa-solid fa-calendar"></i><span>Events</span>
+    </a>
+    <a href="students.html" class="bottom-nav__item">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+    <a href="qr.html" class="bottom-nav__item">
+      <i class="fa-solid fa-print"></i><span>QR</span>
+    </a>
+  </nav>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/events.js"></script>
+</body>
+</html>

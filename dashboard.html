@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMSAMS — Dashboard</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="top-bar">
+    <div class="top-bar__brand">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>HMSAMS</span>
+    </div>
+    <span class="top-bar__subtitle">Hospitality Management Society</span>
+  </header>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    <h1 class="page-title">Dashboard</h1>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-card--blue">
+        <div class="stat-card__icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-card__value" id="stat-active-students">—</div>
+        <div class="stat-card__label">Active Students</div>
+      </div>
+      <div class="stat-card stat-card--green">
+        <div class="stat-card__icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-card__value" id="stat-total-events">—</div>
+        <div class="stat-card__label">Total Events</div>
+      </div>
+      <div class="stat-card stat-card--orange">
+        <div class="stat-card__icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="stat-card__value" id="stat-active-events">—</div>
+        <div class="stat-card__label">Active Events</div>
+      </div>
+      <div class="stat-card stat-card--purple">
+        <div class="stat-card__icon"><i class="fa-solid fa-qrcode"></i></div>
+        <div class="stat-card__value" id="stat-today-scans">—</div>
+        <div class="stat-card__label">Scans Today</div>
+      </div>
+    </div>
+
+    <!-- Active Event Banner -->
+    <div class="active-event-card" id="active-event-card" style="display:none;">
+      <div class="active-event-card__header">
+        <i class="fa-solid fa-circle-dot pulse"></i>
+        <span>Active Event</span>
+      </div>
+      <div class="active-event-card__name" id="active-event-name">—</div>
+      <div class="active-event-card__bar-wrap">
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <span class="active-event-card__count" id="active-event-count">0 / 0 scanned</span>
+      </div>
+      <a href="scan.html" class="btn btn--primary btn--full mt-sm">
+        <i class="fa-solid fa-qrcode"></i> Open Scanner
+      </a>
+    </div>
+
+    <!-- No Active Event -->
+    <div class="empty-state" id="no-event-state" style="display:none;">
+      <i class="fa-solid fa-calendar-xmark"></i>
+      <p>No active event right now.</p>
+      <a href="events.html" class="btn btn--outline">Manage Events</a>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="quick-links">
+      <a href="scan.html"     class="quick-link"><i class="fa-solid fa-qrcode"></i><span>Scanner</span></a>
+      <a href="events.html"   class="quick-link"><i class="fa-solid fa-calendar"></i><span>Events</span></a>
+      <a href="students.html" class="quick-link"><i class="fa-solid fa-users"></i><span>Students</span></a>
+      <a href="qr.html"       class="quick-link"><i class="fa-solid fa-print"></i><span>QR Codes</span></a>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="bottom-nav__item bottom-nav__item--active">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </a>
+    <a href="scan.html" class="bottom-nav__item">
+      <i class="fa-solid fa-qrcode"></i><span>Scan</span>
+    </a>
+    <a href="events.html" class="bottom-nav__item">
+      <i class="fa-solid fa-calendar"></i><span>Events</span>
+    </a>
+    <a href="students.html" class="bottom-nav__item">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+    <a href="qr.html" class="bottom-nav__item">
+      <i class="fa-solid fa-print"></i><span>QR</span>
+    </a>
+  </nav>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMSAMS — QR Codes</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- QR Code generation library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <header class="top-bar">
+    <div class="top-bar__brand">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>HMSAMS</span>
+    </div>
+    <span class="top-bar__subtitle">QR Code Generator</span>
+  </header>
+
+  <!-- PIN Gate Overlay -->
+  <div class="overlay" id="pin-overlay">
+    <div class="pin-card">
+      <div class="pin-card__icon"><i class="fa-solid fa-lock"></i></div>
+      <h2>Officer Access</h2>
+      <p>Enter PIN to continue</p>
+      <input type="password" id="pin-input" class="input" placeholder="Enter PIN" maxlength="20" autocomplete="off" />
+      <div class="pin-card__error" id="pin-error"></div>
+      <button class="btn btn--primary btn--full mt-sm" id="pin-submit">
+        <i class="fa-solid fa-unlock"></i> Unlock
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content" id="main-content" style="display:none;">
+
+    <div class="page-header">
+      <h1 class="page-title">QR Codes</h1>
+      <button class="btn btn--primary" id="btn-print-all" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Print All
+      </button>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-row">
+      <select id="filter-block" class="input input--sm">
+        <option value="">All Blocks</option>
+      </select>
+      <select id="filter-year" class="input input--sm">
+        <option value="">All Year Levels</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+      </select>
+      <button class="btn btn--outline btn--sm" id="btn-generate">
+        <i class="fa-solid fa-rotate"></i> Generate
+      </button>
+    </div>
+
+    <!-- QR Count -->
+    <div class="list-meta" id="qr-count">Loading...</div>
+
+    <!-- QR Grid -->
+    <div class="qr-grid" id="qr-grid">
+      <div class="empty-state">
+        <i class="fa-solid fa-qrcode"></i>
+        <p>Click Generate to load QR codes.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Nav (hidden on print) -->
+  <nav class="bottom-nav no-print">
+    <a href="dashboard.html" class="bottom-nav__item">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </a>
+    <a href="scan.html" class="bottom-nav__item">
+      <i class="fa-solid fa-qrcode"></i><span>Scan</span>
+    </a>
+    <a href="events.html" class="bottom-nav__item">
+      <i class="fa-solid fa-calendar"></i><span>Events</span>
+    </a>
+    <a href="students.html" class="bottom-nav__item">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+    <a href="qr.html" class="bottom-nav__item bottom-nav__item--active">
+      <i class="fa-solid fa-print"></i><span>QR</span>
+    </a>
+  </nav>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/qr.js"></script>
+</body>
+</html>
