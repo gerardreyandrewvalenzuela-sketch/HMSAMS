@@ -69,9 +69,9 @@ function buildEventCard(ev) {
       statusBadge(ev['Status']) +
     '</div>' +
     '<div class="event-card__meta">' +
-      '<span><i class="fa-solid fa-calendar fa-xs"></i> ' + escHtml(String(ev['Date'])) + '</span>' +
-      '<span><i class="fa-solid fa-door-open fa-xs"></i> Reg: ' + escHtml(String(ev['Reg Open'])) + ' – ' + escHtml(String(ev['Reg Close'])) + '</span>' +
-      '<span><i class="fa-solid fa-clock fa-xs"></i> Timeout: ' + escHtml(String(ev['Timeout Deadline'])) + '</span>' +
+      '<span><i class="fa-solid fa-calendar fa-xs"></i> ' + formatEventDate(ev['Date']) + '</span>' +
+      '<span><i class="fa-solid fa-door-open fa-xs"></i> Reg: ' + formatEventTime(ev['Reg Open']) + ' – ' + formatEventTime(ev['Reg Close']) + '</span>' +
+      '<span><i class="fa-solid fa-clock fa-xs"></i> Timeout: ' + formatEventTime(ev['Timeout Deadline']) + '</span>' +
     '</div>' +
     '<div class="event-card__actions">' +
       activateBtn +
@@ -119,7 +119,7 @@ function bindUI() {
       case 'unarchive':
         await changeStatus(eventId, 'Inactive'); break;
       case 'edit':
-        var ev = _allEvents.find(function(e) { return e['Event ID'] === eventId; });
+        var ev = _allEvents.find(function(evt) { return evt['Event ID'] === eventId; });
         if (ev) openModal(ev);
         break;
       case 'delete':
@@ -264,4 +264,37 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── Format Google Sheets date/time values ────────────────────
+function formatEventDate(val) {
+  if (!val) return '—';
+  var d = new Date(val);
+  if (!isNaN(d)) {
+    return d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  return escHtml(String(val));
+}
+
+function formatEventTime(val) {
+  if (!val) return '—';
+  var d = new Date(val);
+  // Google Sheets stores time-only as a 1899 date
+  if (!isNaN(d) && d.getFullYear() === 1899) {
+    var h = d.getUTCHours();
+    var m = d.getUTCMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  }
+  // Plain HH:mm string
+  if (typeof val === 'string' && val.indexOf(':') !== -1) {
+    var parts = val.split(':');
+    var h2 = parseInt(parts[0]);
+    var m2 = parseInt(parts[1]);
+    var ampm2 = h2 >= 12 ? 'PM' : 'AM';
+    h2 = h2 % 12 || 12;
+    return h2 + ':' + (m2 < 10 ? '0' + m2 : m2) + ' ' + ampm2;
+  }
+  return escHtml(String(val));
 }
