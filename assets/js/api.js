@@ -4,7 +4,7 @@
 // ============================================================
 
 // TODO: Replace this URL after you deploy your Apps Script as a Web App
-var API_URL = 'https://script.google.com/macros/s/AKfycbwk8D_oQ5g6ykbsRi0qggS_v7b8V7Z7FLrzd-NqyG_mBlwXrxSBs7_oukQ1PoYOo6uGjA/exec';
+var API_URL = 'https://script.google.com/macros/s/AKfycbyYSmxuiPc0Rvdu4CRaff4wyweUcVfW9FFolMRyT_ZSIPVuiCJuinTXP7tmHbwl3KPXnw/exec';
 
 // ── Stored PIN (session-level) ───────────────────────────────
 var _pin = sessionStorage.getItem('hmsams_pin') || '';
