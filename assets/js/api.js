@@ -1,5 +1,6 @@
 // ============================================================
 // api.js — All communication with the Apps Script Web App
+// v2 — PIN checked locally, single session unlock
 // ============================================================
 
 // TODO: Replace this URL after you deploy your Apps Script as a Web App
