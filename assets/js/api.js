@@ -4,7 +4,7 @@
 // ============================================================
 
 // TODO: Replace this URL after you deploy your Apps Script as a Web App
-var API_URL = 'https://script.google.com/macros/s/AKfycbxI8tSX7IOkE_BCfnc_v9pjFewResYTrQtKZHH8SFb2rgfbUZDAgy9Ez_kzzk_QabAJaA/exec';
+var API_URL = 'https://script.google.com/macros/s/AKfycbxfP7YBAf3IF8H7D4Gm24CDuS9TC-w6zisQCxsUD_0MisApMFy1HXtftx09LglXmjAnTg/exec';
 
 // ── Stored PIN (session-level) ───────────────────────────────
 var _pin = sessionStorage.getItem('hmsams_pin') || '';
@@ -39,21 +39,24 @@ async function apiGet(action, params) {
 }
 
 /**
- * POST request — PIN required for write operations
- * Apps Script redirects POST requests, so we use no-cors mode
- * and send as GET with action params instead for reliability
+ * POST request — sent as GET to avoid Apps Script CORS/redirect issues
+ * Flattens nested 'data' objects into top-level params
  */
 async function apiPost(action, body) {
-  // Send as GET with all params in URL to avoid CORS/redirect issues with Apps Script
   var url = new URL(API_URL);
   url.searchParams.set('action', action);
   url.searchParams.set('pin', _pin);
 
-  // Add all body fields as query params
+  // Flatten params — if value is a 'data' object, spread its keys directly
   Object.keys(body).forEach(function(k) {
-    if (k !== 'action' && k !== 'pin') {
-      var val = body[k];
-      url.searchParams.set(k, typeof val === 'object' ? JSON.stringify(val) : val);
+    var val = body[k];
+    if (k === 'data' && typeof val === 'object' && val !== null) {
+      // Spread nested data object as top-level params
+      Object.keys(val).forEach(function(dk) {
+        url.searchParams.set(dk, val[dk] !== null && val[dk] !== undefined ? val[dk] : '');
+      });
+    } else {
+      url.searchParams.set(k, val !== null && val !== undefined ? val : '');
     }
   });
 
