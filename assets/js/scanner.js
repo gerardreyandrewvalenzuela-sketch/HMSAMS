@@ -1,9 +1,29 @@
 // ============================================================
-// scanner.js — Scan result page + live attendance feed
+// scanner.js
+// QR Scanner & Live Attendance
 // ============================================================
 
-var _activeEvent  = null;
-var _feedTimer    = null;
+
+// ============================================================
+// Constants
+// ============================================================
+
+
+// ============================================================
+// State
+// ============================================================
+
+var _activeEvent = null;
+var _feedTimer = null;
+
+
+// ============================================================
+// Initialization
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+    setupPinGate(onPinUnlocked);
+});
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -45,7 +65,15 @@ async function onPinUnlocked() {
   });
 }
 
-// ── Load Active Event ────────────────────────────────────────
+/**
+ * Loads the currently active event from the server
+ * and updates the scanner header.
+ */
+
+// ============================================================
+// Event Loading
+// ============================================================
+
 async function loadActiveEvent() {
   try {
     var res = await getActiveEvent();
@@ -72,7 +100,14 @@ async function loadActiveEvent() {
   }
 }
 
-// ── Process Scan (called when QR URL is opened) ──────────────
+/**
+ * Processes a QR code scan.
+ */
+
+// ============================================================
+// Attendance Processing
+// ============================================================
+
 async function handleQrScan(studentNo, studentName, eventId) {
   if (!_activeEvent && !eventId) {
     showScanResult({
@@ -94,7 +129,9 @@ async function handleQrScan(studentNo, studentName, eventId) {
   }
 }
 
-// ── Manual Entry ─────────────────────────────────────────────
+/**
+ * Handles manual attendance entry.
+ */
 async function handleManualEntry() {
   var studentNo   = document.getElementById('manual-student-no').value.trim();
   var studentName = document.getElementById('manual-student-name').value.trim();
@@ -129,7 +166,14 @@ async function handleManualEntry() {
   btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
 }
 
-// ── Scan Result Banner ───────────────────────────────────────
+/**
+ * Displays the scan result banner.
+ */
+
+// ============================================================
+// UI Rendering
+// ============================================================
+
 function showScanResult(res) {
   var el      = document.getElementById('scan-result');
   var iconEl  = document.getElementById('scan-result-icon');
@@ -177,6 +221,11 @@ function showScanResult(res) {
 }
 
 // ── Live Feed ────────────────────────────────────────────────
+
+// ============================================================
+// Live Attendance Feed
+// ============================================================
+
 async function loadLiveFeed() {
   if (!_activeEvent) return;
 
