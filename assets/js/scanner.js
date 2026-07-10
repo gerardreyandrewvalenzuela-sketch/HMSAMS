@@ -20,6 +20,9 @@ async function onPinUnlocked() {
   var studentName= params.get('name')  || '';
   var eventParam = params.get('event') || '';
 
+  // Always clean URL first — enables continuous scanning on same page
+  history.replaceState({}, '', 'scan.html');
+
   // Load active event info
   await loadActiveEvent();
 
@@ -27,8 +30,6 @@ async function onPinUnlocked() {
   if (studentNo) {
     await handleQrScan(studentNo, studentName, eventParam);
   }
-  // Always clean URL to enable continuous scanning
-  history.replaceState({}, '', 'scan.html');
 
   // Load live feed
   loadLiveFeed();

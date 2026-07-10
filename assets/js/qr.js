@@ -2,8 +2,8 @@
 // qr.js — QR code generator page
 // ============================================================
 
-// Base URL for QR scan links — Points directly to Apps Script API
-var QR_BASE_URL = 'https://script.google.com/macros/s/AKfycbxfP7YBAf3IF8H7D4Gm24CDuS9TC-w6zisQCxsUD_0MisApMFy1HXtftx09LglXmjAnTg/exec';
+// Base URL for QR scan links
+var QR_BASE_URL = 'https://gerardreyandrewvalenzuela-sketch.github.io/HMSAMS/scan.html';
 
 var _allStudents = [];
 
@@ -100,10 +100,9 @@ function buildQRItem(student) {
   ) + ' Year' : '';
   var block = student['Block'] ? 'Block ' + student['Block'] : '';
 
-  // Build the QR scan URL — points to Apps Script API
+  // Build the QR scan URL
   var url = QR_BASE_URL +
-    '?action=quickScan' +
-    '&id='   + encodeURIComponent(studentNo) +
+    '?id='   + encodeURIComponent(studentNo) +
     '&name=' + encodeURIComponent(fullName);
 
   // Build ID card container
