@@ -120,14 +120,7 @@ async function handleQrScan(studentNo, studentName, eventId) {
 
   var eid = eventId || (_activeEvent ? _activeEvent['Event ID'] : '');
 
-  try {
-    var res = await processScan(studentNo, studentName, eid);
-    showScanResult(res);
-    if (res.success) loadLiveFeed();
-  } catch(err) {
-    showScanResult({ success: false, status: 'error', message: 'Connection error. Try again.' });
-  }
-}
+ await submitAttendance(studentNo, studentName, eid);
 
 /**
  * Handles manual attendance entry.
@@ -150,20 +143,57 @@ async function handleManualEntry() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recording...';
 
-  try {
-    var res = await processScan(studentNo, studentName, _activeEvent['Event ID']);
-    showScanResult(res);
-    if (res.success) {
-      document.getElementById('manual-student-no').value   = '';
-      document.getElementById('manual-student-name').value = '';
-      loadLiveFeed();
-    }
-  } catch(err) {
-    showToast('Connection error. Try again.', 'error');
-  }
+const result = await submitAttendance(
+    studentNo,
+    studentName,
+    _activeEvent['Event ID']
+);
+
+if (result.success) {
+
+    document.getElementById('manual-student-no').value = '';
+    document.getElementById('manual-student-name').value = '';
+
+}
 
   btn.disabled = false;
   btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
+}
+
+/**
+ * Submits attendance to the backend and updates the UI.
+ *
+ * @param {string} studentNo
+ * @param {string} studentName
+ * @param {string} eventId
+ * @returns {Promise<Object>}
+ */
+async function submitAttendance(studentNo, studentName, eventId) {
+    try {
+        const result = await processScan(studentNo, studentName, eventId);
+
+        showScanResult(result);
+
+        if (result.success) {
+            await loadLiveFeed();
+        }
+
+        return result;
+
+    } catch (error) {
+
+        console.error('[Scanner] Attendance submission failed:', error);
+
+        const failure = {
+            success: false,
+            status: 'error',
+            message: 'Connection error. Please try again.'
+        };
+
+        showScanResult(failure);
+
+        return failure;
+    }
 }
 
 /**
