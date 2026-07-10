@@ -1,10 +1,12 @@
 // ============================================================
 // scanner.js — Scan result page + live attendance feed
+// Continuous scanning enabled: no page redirects, seamless flow
 // ============================================================
 
 var _activeEvent  = null;
 var _feedTimer    = null;
 var _isScanProcessing = false;  // Prevent duplicate rapid scans
+var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,22 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
 async function onPinUnlocked() {
   document.getElementById('scanner-content').style.display = 'block';
 
-  // Check for scan params in URL (student scanned their QR)
-  var params     = new URLSearchParams(window.location.search);
-  var studentNo  = params.get('id')    || '';
-  var studentName= params.get('name')  || '';
-  var eventParam = params.get('event') || '';
-
-  // Always clean URL first — enables continuous scanning on same page
-  history.replaceState({}, '', 'scan.html');
-
   // Load active event info
   await loadActiveEvent();
 
-  // If QR scan triggered this page load, process it
-  if (studentNo) {
-    await handleQrScan(studentNo, studentName, eventParam);
-  }
+  // Check for scan params in URL (student scanned their QR)
+  checkAndProcessScanParams();
 
   // Load live feed
   loadLiveFeed();
@@ -48,6 +39,52 @@ async function onPinUnlocked() {
   document.getElementById('refresh-feed').addEventListener('click', function() {
     loadLiveFeed();
   });
+
+  // Monitor URL changes for continuous scanning
+  // When camera app scans a new QR code, it navigates to scan.html?id=...
+  // We intercept this and process without full page reload
+  listenForScanParams();
+}
+
+// ── Continuous Scanning: Listen for URL changes ──────────────
+function listenForScanParams() {
+  // Use popstate to detect browser back/forward (though we control history)
+  window.addEventListener('popstate', function(e) {
+    checkAndProcessScanParams();
+  });
+
+  // Also listen for manual navigation / new tabs opening old URL
+  // This uses a polling approach for browser compatibility
+  setInterval(function() {
+    var params = new URLSearchParams(window.location.search);
+    var paramsStr = params.get('id') + '|' + params.get('name') + '|' + params.get('event');
+    
+    if (paramsStr !== '|null|null' && paramsStr !== _lastProcessedParams && !_isScanProcessing) {
+      checkAndProcessScanParams();
+    }
+  }, 300);
+}
+
+// ── Check and Process Scan Params ────────────────────────────
+function checkAndProcessScanParams() {
+  var params = new URLSearchParams(window.location.search);
+  var studentNo = params.get('id') || '';
+  var studentName = params.get('name') || '';
+  var eventParam = params.get('event') || '';
+  
+  // Only process if there are actual scan params and we haven't processed them yet
+  if (studentNo && !_isScanProcessing) {
+    var paramsStr = studentNo + '|' + studentName + '|' + eventParam;
+    if (paramsStr !== _lastProcessedParams) {
+      _lastProcessedParams = paramsStr;
+      handleQrScan(studentNo, studentName, eventParam);
+    }
+  }
+  
+  // Always keep URL clean for next scan
+  if (studentNo) {
+    history.replaceState({}, '', 'scan.html');
+  }
 }
 
 // ── Load Active Event ────────────────────────────────────────
@@ -192,11 +229,11 @@ function showScanResult(res) {
 
   el.style.display = 'block';
 
-  // Auto-hide after 10 seconds (increased from 8)
+  // Auto-hide faster for continuous scanning flow (was 10s, now 6s)
   clearTimeout(el._hideTimer);
   el._hideTimer = setTimeout(function() {
     el.style.display = 'none';
-  }, 10000);
+  }, 6000);
 }
 
 // ── Live Feed ────────────────────────────────────────────────
