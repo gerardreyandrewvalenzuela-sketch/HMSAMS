@@ -350,6 +350,8 @@ function startScannerLoop() {
   if (!canvas || !video) return;
   
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
+  var frameCount = 0;
+  var lastDetectedQR = '';
   
   // Safety counter to prevent infinite waiting
   var readyAttempts = 0;
@@ -379,23 +381,39 @@ function startScannerLoop() {
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Get image data (now safe since canvas has dimensions)
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    
-    // Process with jsQR
-    var qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-    
-    if (qrCode && qrCode.data) {
-      // QR code detected!
-      var qrData = qrCode.data;
-      hint.textContent = '✅ QR detected!';
-      
-      // Parse the QR data (format: scan.html?id=...&name=...)
-      processQrScan(qrData);
-    } else {
-      hint.textContent = '↻ Point at QR code';
+    // Process every 2nd frame for speed (skip every other frame)
+    if (frameCount % 2 === 0) {
+      try {
+        // Get image data (now safe since canvas has dimensions)
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        // Process with jsQR
+        var qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (qrCode && qrCode.data) {
+          var qrData = qrCode.data;
+          
+          // Only process if different from last detected QR
+          if (qrData !== lastDetectedQR) {
+            lastDetectedQR = qrData;
+            hint.textContent = '✅ QR detected! Processing...';
+            status.textContent = 'Processing scan...';
+            
+            // Process the scan with small delay to show detection
+            setTimeout(function() {
+              processQrScan(qrData);
+            }, 100);
+          }
+        } else {
+          hint.textContent = '↻ Point at QR code';
+          lastDetectedQR = '';
+        }
+      } catch(err) {
+        console.error('QR scan error:', err);
+      }
     }
     
+    frameCount++;
     requestAnimationFrame(scanFrame);
   }
   
@@ -410,25 +428,50 @@ function processQrScan(qrData) {
   if (_isScanProcessing) return;
   
   try {
-    // Extract parameters from QR data
-    var url = new URL(qrData, window.location.origin);
-    var studentNo = url.searchParams.get('id') || '';
-    var fullName = url.searchParams.get('name') || '';
-    var eventId = url.searchParams.get('event') || '';
+    var studentNo = '';
+    var fullName = '';
+    var eventId = '';
     
-    if (!studentNo) return;
+    // Try to parse as URL first
+    try {
+      var url = new URL(qrData, window.location.origin);
+      studentNo = url.searchParams.get('id') || '';
+      fullName = url.searchParams.get('name') || '';
+      eventId = url.searchParams.get('event') || '';
+    } catch(e) {
+      // If URL parsing fails, try to extract from query string
+      // QR data might be: "scan.html?id=2024-0001&name=John+Doe"
+      if (qrData.indexOf('id=') !== -1) {
+        var idMatch = qrData.match(/[?&]id=([^&]+)/);
+        var nameMatch = qrData.match(/[?&]name=([^&]+)/);
+        var eventMatch = qrData.match(/[?&]event=([^&]+)/);
+        
+        if (idMatch) studentNo = decodeURIComponent(idMatch[1]);
+        if (nameMatch) fullName = decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ');
+        if (eventMatch) eventId = decodeURIComponent(eventMatch[1]);
+      }
+    }
+    
+    if (!studentNo) {
+      console.warn('No student ID found in QR:', qrData);
+      return;
+    }
     
     // Prevent duplicate scans
     var scanStr = studentNo + '|' + fullName + '|' + eventId;
-    if (scanStr === _lastProcessedParams) return;
+    if (scanStr === _lastProcessedParams) {
+      console.warn('Duplicate scan detected');
+      return;
+    }
     
     _lastProcessedParams = scanStr;
+    console.log('Processing QR scan:', { studentNo, fullName, eventId });
     
     // Process the scan
     handleQrScan(studentNo, fullName, eventId);
     
   } catch(err) {
-    console.log('QR parse error:', err.message);
+    console.error('QR parse error:', err);
   }
 }
 
