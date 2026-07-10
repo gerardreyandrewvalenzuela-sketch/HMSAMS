@@ -95,7 +95,7 @@ function initializeSheets() {
     attendanceSheet = ss.insertSheet(CONFIG.SHEETS.ATTENDANCE);
     attendanceSheet.appendRow([
       'Log ID', 'Event ID', 'Event Name', 'Student No',
-      'Full Name', 'Year Level', 'Block', 'Time In', 'Time Out', 'Attendance Status', 'Scan Count'
+      'Full Name', 'Time In', 'Time Out', 'Attendance Status', 'Scan Count'
     ]);
     attendanceSheet.setFrozenRows(1);
   }
