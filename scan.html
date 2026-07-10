@@ -48,6 +48,7 @@
       <div class="scan-result__status" id="scan-result-status"></div>
       <div class="scan-result__name"   id="scan-result-name"></div>
       <div class="scan-result__meta"   id="scan-result-meta"></div>
+      <div class="scan-result__details" id="scan-result-details"></div>
     </div>
 
     <!-- Event Info -->
@@ -71,28 +72,32 @@
       <div class="scanner-instructions__icon">
         <i class="fa-solid fa-mobile-screen-button"></i>
       </div>
-      <h3>How to scan</h3>
+      <h3>Quick Scan Mode</h3>
       <ol>
         <li>Make sure an event is active</li>
         <li>Have the student open their QR code</li>
         <li>Use your phone's camera app to scan it</li>
-        <li>The result will appear on this page automatically</li>
+        <li>The result will appear here automatically</li>
+        <li><strong>Scan the same QR code again for Time Out</strong></li>
       </ol>
-      <p class="text-muted">Or enter a Student No. manually below:</p>
+      <p class="text-muted">💡 Keep this page open for continuous scanning without reopening</p>
 
       <!-- Manual Entry Fallback -->
       <div class="manual-entry">
+        <h4>Or enter manually:</h4>
         <input
           type="text"
           id="manual-student-no"
           class="input"
           placeholder="Student No. (e.g. 2024-0001)"
+          autocomplete="off"
         />
         <input
           type="text"
           id="manual-student-name"
           class="input mt-xs"
           placeholder="Full Name"
+          autocomplete="off"
         />
         <button class="btn btn--primary btn--full mt-sm" id="manual-submit">
           <i class="fa-solid fa-check"></i> Record Attendance

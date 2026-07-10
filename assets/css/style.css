@@ -463,20 +463,22 @@ img { max-width: 100%; }
   padding: 24px 20px;
   text-align: center;
   margin-bottom: 16px;
-  box-shadow: var(--shadow);
-  border: 2px solid var(--clr-border);
+  box-shadow: var(--shadow-lg);
+  border: 3px solid var(--clr-border);
   animation: slideIn .3s ease;
+  border-left: 6px solid;
 }
-.scan-result--timein    { border-color: var(--clr-primary); }
-.scan-result--late      { border-color: var(--clr-warning); }
-.scan-result--timeout   { border-color: var(--clr-success); }
-.scan-result--duplicate { border-color: var(--clr-text-muted); }
-.scan-result--error     { border-color: var(--clr-danger); }
+.scan-result--timein    { border-color: var(--clr-primary); border-left-color: var(--clr-primary); background: linear-gradient(135deg, rgba(37,99,235,.05) 0%, transparent 100%); }
+.scan-result--late      { border-color: var(--clr-warning); border-left-color: var(--clr-warning); background: linear-gradient(135deg, rgba(217,119,6,.05) 0%, transparent 100%); }
+.scan-result--timeout   { border-color: var(--clr-success); border-left-color: var(--clr-success); background: linear-gradient(135deg, rgba(22,163,74,.05) 0%, transparent 100%); }
+.scan-result--duplicate { border-color: var(--clr-text-muted); border-left-color: var(--clr-text-muted); }
+.scan-result--error     { border-color: var(--clr-danger); border-left-color: var(--clr-danger); background: linear-gradient(135deg, rgba(220,38,38,.05) 0%, transparent 100%); }
 
 .scan-result__icon   { font-size: 3rem; margin-bottom: 8px; }
 .scan-result__status { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
 .scan-result__name   { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-.scan-result__meta   { font-size: .83rem; color: var(--clr-text-muted); }
+.scan-result__meta   { font-size: .83rem; color: var(--clr-text-muted); margin-bottom: 8px; }
+.scan-result__details { font-size: .78rem; color: var(--clr-text-muted); font-style: italic; }
 
 /* ── Event Info Bar ─────────────────────────────────────────── */
 .event-info-bar {
@@ -510,6 +512,7 @@ img { max-width: 100%; }
 .scanner-instructions ol { padding-left: 20px; }
 .scanner-instructions li { margin-bottom: 4px; font-size: .9rem; color: var(--clr-text-muted); }
 .manual-entry { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--clr-border); }
+.manual-entry h4 { font-size: .85rem; font-weight: 700; margin-bottom: 10px; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: .03em; }
 
 /* ── Search Bar ─────────────────────────────────────────────── */
 .search-bar {

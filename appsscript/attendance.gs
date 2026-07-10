@@ -9,10 +9,12 @@ var ATT_COLS = {
   EVENT_NAME: 2,
   STUDENT_NO: 3,
   FULL_NAME:  4,
-  TIME_IN:    5,
-  TIME_OUT:   6,
-  STATUS:     7,
-  SCAN_COUNT: 8
+  YEAR_LEVEL: 5,
+  BLOCK:      6,
+  TIME_IN:    7,
+  TIME_OUT:   8,
+  STATUS:     9,
+  SCAN_COUNT: 10
 };
 
 function generateLogId() {
@@ -90,6 +92,8 @@ function processScan(studentNo, fullName, eventId) {
     event['Event Name'],
     studentNo,
     fullName,
+    student['Year Level'] || '',
+    student['Block'] || '',
     timeInStr,
     '',
     attendanceStatus,
