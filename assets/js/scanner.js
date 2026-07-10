@@ -7,6 +7,8 @@ var _activeEvent  = null;
 var _feedTimer    = null;
 var _isScanProcessing = false;  // Prevent duplicate rapid scans
 var _lastProcessedParams = '';  // Track last scan to prevent duplicates
+var _cameraStream = null;        // Track active camera stream
+var _scannerActive = false;      // Track if scanner is running
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -39,6 +41,10 @@ async function onPinUnlocked() {
   document.getElementById('refresh-feed').addEventListener('click', function() {
     loadLiveFeed();
   });
+
+  // Camera scanner buttons
+  document.getElementById('btn-open-camera').addEventListener('click', initializeCamera);
+  document.getElementById('btn-close-camera').addEventListener('click', closeCamera);
 
   // Monitor URL changes for continuous scanning
   // When camera app scans a new QR code, it navigates to scan.html?id=...
@@ -278,4 +284,142 @@ function startFeedRefresh() {
   _feedTimer = setInterval(function() {
     loadActiveEvent().then(loadLiveFeed);
   }, 3000);
+}
+
+// ── Camera Scanner Functions ─────────────────────────────────
+
+/**
+ * Initialize camera and start QR scanning
+ */
+async function initializeCamera() {
+  var scanner = document.getElementById('camera-scanner');
+  var status  = document.getElementById('scanner-status');
+  
+  try {
+    status.textContent = 'Requesting camera access...';
+    
+    // Request camera stream
+    _cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false
+    });
+    
+    // Set video source
+    var video = document.getElementById('scanner-video');
+    video.srcObject = _cameraStream;
+    
+    scanner.style.display = 'block';
+    status.textContent = '✅ Camera ready — point at QR code';
+    _scannerActive = true;
+    
+    // Start processing frames
+    startScannerLoop();
+    
+  } catch(err) {
+    if (err.name === 'NotAllowedError') {
+      status.textContent = '❌ Camera access denied. Please allow camera access.';
+    } else if (err.name === 'NotFoundError') {
+      status.textContent = '❌ No camera found on this device.';
+    } else {
+      status.textContent = '❌ Camera error: ' + err.message;
+    }
+  }
+}
+
+/**
+ * Continuously process video frames to detect QR codes
+ */
+function startScannerLoop() {
+  var video = document.getElementById('scanner-video');
+  var canvas = document.getElementById('scanner-canvas');
+  var status = document.getElementById('scanner-status');
+  var hint = document.getElementById('scanner-hint');
+  
+  if (!canvas) return;
+  
+  var ctx = canvas.getContext('2d', { willReadFrequently: true });
+  
+  function scanFrame() {
+    if (!_scannerActive) return;
+    
+    // Set canvas size to match video
+    if (canvas.width !== video.videoWidth) {
+      canvas.width = video.videoWidth;
+    }
+    if (canvas.height !== video.videoHeight) {
+      canvas.height = video.videoHeight;
+    }
+    
+    // Draw video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Get image data
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Process with jsQR
+    var qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+    
+    if (qrCode && qrCode.data) {
+      // QR code detected!
+      var qrData = qrCode.data;
+      hint.textContent = '✅ QR detected!';
+      
+      // Parse the QR data (format: scan.html?id=...&name=...)
+      processQrScan(qrData);
+    } else {
+      hint.textContent = '↻ Point at QR code';
+    }
+    
+    requestAnimationFrame(scanFrame);
+  }
+  
+  scanFrame();
+}
+
+/**
+ * Parse QR code data and process scan
+ * QR format: scan.html?id=2024-0001&name=John+Doe
+ */
+function processQrScan(qrData) {
+  if (_isScanProcessing) return;
+  
+  try {
+    // Extract parameters from QR data
+    var url = new URL(qrData, window.location.origin);
+    var studentNo = url.searchParams.get('id') || '';
+    var fullName = url.searchParams.get('name') || '';
+    var eventId = url.searchParams.get('event') || '';
+    
+    if (!studentNo) return;
+    
+    // Prevent duplicate scans
+    var scanStr = studentNo + '|' + fullName + '|' + eventId;
+    if (scanStr === _lastProcessedParams) return;
+    
+    _lastProcessedParams = scanStr;
+    
+    // Process the scan
+    handleQrScan(studentNo, fullName, eventId);
+    
+  } catch(err) {
+    console.log('QR parse error:', err.message);
+  }
+}
+
+/**
+ * Close camera and cleanup
+ */
+function closeCamera() {
+  _scannerActive = false;
+  
+  // Stop all tracks
+  if (_cameraStream) {
+    _cameraStream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+    _cameraStream = null;
+  }
+  
+  // Hide scanner
+  document.getElementById('camera-scanner').style.display = 'none';
 }
