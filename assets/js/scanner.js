@@ -4,6 +4,7 @@
 
 var _activeEvent  = null;
 var _feedTimer    = null;
+var _isScanProcessing = false;  // Prevent duplicate rapid scans
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,9 +26,9 @@ async function onPinUnlocked() {
   // If QR scan triggered this page load, process it
   if (studentNo) {
     await handleQrScan(studentNo, studentName, eventParam);
-    // Clean URL so refreshing doesn't re-submit
-    history.replaceState({}, '', 'scan.html');
   }
+  // Always clean URL to enable continuous scanning
+  history.replaceState({}, '', 'scan.html');
 
   // Load live feed
   loadLiveFeed();
@@ -36,6 +37,9 @@ async function onPinUnlocked() {
   // Manual entry button
   document.getElementById('manual-submit').addEventListener('click', handleManualEntry);
   document.getElementById('manual-student-no').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleManualEntry();
+  });
+  document.getElementById('manual-student-name').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleManualEntry();
   });
 
@@ -109,6 +113,13 @@ async function handleManualEntry() {
     return;
   }
 
+  // Prevent duplicate rapid submissions
+  if (_isScanProcessing) {
+    showToast('Processing previous scan...', 'warning');
+    return;
+  }
+
+  _isScanProcessing = true;
   var btn = document.getElementById('manual-submit');
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recording...';
@@ -120,6 +131,10 @@ async function handleManualEntry() {
       document.getElementById('manual-student-no').value   = '';
       document.getElementById('manual-student-name').value = '';
       loadLiveFeed();
+      // Auto-focus for next scan
+      setTimeout(function() {
+        document.getElementById('manual-student-no').focus();
+      }, 500);
     }
   } catch(err) {
     showToast('Connection error. Try again.', 'error');
@@ -127,6 +142,7 @@ async function handleManualEntry() {
 
   btn.disabled = false;
   btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
+  _isScanProcessing = false;
 }
 
 // ── Scan Result Banner ───────────────────────────────────────
@@ -163,17 +179,23 @@ function showScanResult(res) {
   iconEl.textContent   = icon;
   statusEl.textContent = statusText;
   nameEl.textContent   = res.student || '';
-  metaEl.textContent   = res.time
-    ? formatDateTime(res.time) + ' — ' + (res.eventName || '')
-    : res.message || '';
+  
+  var metaText = res.time ? formatDateTime(res.time) : '';
+  if (res.eventName) {
+    metaText += metaText ? ' — ' + res.eventName : res.eventName;
+  }
+  if (res.message && !res.time) {
+    metaText = res.message;
+  }
+  metaEl.textContent = metaText;
 
   el.style.display = 'block';
 
-  // Auto-hide after 8 seconds
+  // Auto-hide after 10 seconds (increased from 8)
   clearTimeout(el._hideTimer);
   el._hideTimer = setTimeout(function() {
     el.style.display = 'none';
-  }, 8000);
+  }, 10000);
 }
 
 // ── Live Feed ────────────────────────────────────────────────
