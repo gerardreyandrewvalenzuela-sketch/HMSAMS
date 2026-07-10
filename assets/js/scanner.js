@@ -10,6 +10,11 @@ var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 var _cameraStream = null;        // Track active camera stream
 var _scannerActive = false;      // Track if scanner is running
 
+var _lastScan = {
+    value: '',
+    time: 0
+};
+
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   setupPinGate(onPinUnlocked);
@@ -122,29 +127,49 @@ async function loadActiveEvent() {
 
 // ── Process Scan (called when QR URL is opened) ──────────────
 async function handleQrScan(studentNo, studentName, eventId) {
-  if (!_activeEvent && !eventId) {
-    showScanResult({
-      success: false,
-      status:  'error',
-      message: 'No active event. Please activate an event first.'
-    });
-    return;
-  }
 
-  var eid = eventId || (_activeEvent ? _activeEvent['Event ID'] : '');
+    if (_isScanProcessing) return;
+    _isScanProcessing = true;
 
-  try {
-    var res = await processScan(studentNo, studentName, eid);
-    showScanResult(res);
-    if (res.success) loadLiveFeed();
-  } catch(err) {
-    showScanResult({ success: false, status: 'error', message: 'Connection error. Try again.' });
-  }
+    try {
+
+        if (!_activeEvent && !eventId) {
+            showScanResult({
+                success:false,
+                status:'error',
+                message:'No active event.'
+            });
+            return;
+        }
+
+        var eid = eventId || _activeEvent['Event ID'];
+
+        var res = await processScan(studentNo, studentName, eid);
+
+        showScanResult(res);
+
+        if (res.success) {
+            loadLiveFeed();
+        }
+
+    } catch(err) {
+
+        showScanResult({
+            success:false,
+            status:'error',
+            message:'Connection error.'
+        });
+
+    } finally {
+
+        _isScanProcessing = false;
+
+    }
 }
 
 // ── Manual Entry ─────────────────────────────────────────────
 async function handleManualEntry() {
-  var studentNo   = document.getElementById('manual-student-no').value.trim();
+  var studentNo = document.getElementById('manual-student-no').value.trim();
   var studentName = document.getElementById('manual-student-name').value.trim();
 
   if (!studentNo || !studentName) {
@@ -157,7 +182,6 @@ async function handleManualEntry() {
     return;
   }
 
-  // Prevent duplicate rapid submissions
   if (_isScanProcessing) {
     showToast('Processing previous scan...', 'warning');
     return;
@@ -171,22 +195,25 @@ async function handleManualEntry() {
   try {
     var res = await processScan(studentNo, studentName, _activeEvent['Event ID']);
     showScanResult(res);
+
     if (res.success) {
-      document.getElementById('manual-student-no').value   = '';
+      document.getElementById('manual-student-no').value = '';
       document.getElementById('manual-student-name').value = '';
       loadLiveFeed();
-      // Auto-focus for next scan
-      setTimeout(function() {
+
+      setTimeout(function () {
         document.getElementById('manual-student-no').focus();
       }, 500);
     }
-  } catch(err) {
-    showToast('Connection error. Try again.', 'error');
-  }
 
-  btn.disabled = false;
-  btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
-  _isScanProcessing = false;
+  } catch (err) {
+    showToast('Connection error. Try again.', 'error');
+
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
+    _isScanProcessing = false;
+  }
 }
 
 // ── Scan Result Banner ───────────────────────────────────────
@@ -299,14 +326,39 @@ async function initializeCamera() {
     status.textContent = 'Requesting camera access...';
     
     // Request camera stream
-    _cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
-      audio: false
-    });
+_cameraStream = await navigator.mediaDevices.getUserMedia({
+  video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+    focusMode: 'continuous'
+  },
+  audio: false
+});
     
     // Set video source
     var video = document.getElementById('scanner-video');
     video.srcObject = _cameraStream;
+
+    const track = _cameraStream.getVideoTracks()[0];
+
+try {
+  const capabilities = track.getCapabilities();
+
+  if (capabilities.focusMode) {
+    await track.applyConstraints({
+      advanced: [{
+        focusMode: 'continuous'
+      }]
+    });
+  }
+
+  if (capabilities.torch) {
+    console.log('Torch available');
+  }
+} catch(e) {
+  console.log('Advanced camera settings unsupported');
+}
     
     scanner.style.display = 'block';
     status.textContent = 'Starting camera...';
@@ -350,13 +402,14 @@ function startScannerLoop() {
   if (!canvas || !video) return;
   
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
-  var frameCount = 0;
   var lastDetectedQR = '';
+  var lastDetectedTime = 0;
+
   
   // Safety counter to prevent infinite waiting
   var readyAttempts = 0;
   
-  function scanFrame() {
+  async function scanFrame() {
     if (!_scannerActive) return;
     
     // Wait for video to have valid dimensions
@@ -369,8 +422,13 @@ function startScannerLoop() {
     }
     
     // Set canvas size to match video
+if (
+    canvas.width !== video.videoWidth ||
+    canvas.height !== video.videoHeight
+) {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+}
     
     // Safety check - if canvas still has no dimensions, skip frame
     if (canvas.width === 0 || canvas.height === 0) {
@@ -382,38 +440,65 @@ function startScannerLoop() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     // Process every 2nd frame for speed (skip every other frame)
-    if (frameCount % 2 === 0) {
+   {
       try {
         // Get image data (now safe since canvas has dimensions)
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const scanSize = Math.floor(
+    Math.min(canvas.width, canvas.height) * 0.9
+);
+
+const sx = Math.floor((canvas.width - scanSize) / 2);
+const sy = Math.floor((canvas.height - scanSize) / 2);
+var imageData = ctx.getImageData(
+  sx,
+  sy,
+  scanSize,
+  scanSize
+);
         
         // Process with jsQR
-        var qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+       var qrCode = jsQR(
+  imageData.data,
+  imageData.width,
+  imageData.height,
+  {
+    inversionAttempts: "attemptBoth"
+  }
+);
         
         if (qrCode && qrCode.data) {
           var qrData = qrCode.data;
           
           // Only process if different from last detected QR
-          if (qrData !== lastDetectedQR) {
-            lastDetectedQR = qrData;
-            hint.textContent = '✅ QR detected! Processing...';
-            status.textContent = 'Processing scan...';
+          if (qrData !== lastDetectedQR ||
+    Date.now() - lastDetectedTime > 2000) {
+             lastDetectedQR = qrData;
+             lastDetectedTime = Date.now();
+
+              hint.textContent = '✅ QR detected!';
+              status.textContent = 'Processing...';
             
             // Process the scan with small delay to show detection
-            setTimeout(function() {
-              processQrScan(qrData);
-            }, 100);
+            
+await processQrScan(qrData);
+
+status.textContent = '✅ Camera ready — point at QR code';
+hint.textContent = '↻ Point at QR code';
+
+await new Promise(resolve => setTimeout(resolve, 300));
+            
+            }
           }
         } else {
           hint.textContent = '↻ Point at QR code';
-          lastDetectedQR = '';
+         
         }
       } catch(err) {
         console.error('QR scan error:', err);
       }
     }
     
-    frameCount++;
+  
     requestAnimationFrame(scanFrame);
   }
   
@@ -424,7 +509,7 @@ function startScannerLoop() {
  * Parse QR code data and process scan
  * QR format: scan.html?id=2024-0001&name=John+Doe
  */
-function processQrScan(qrData) {
+async function processQrScan(qrData) {
   if (_isScanProcessing) return;
   
   try {
@@ -458,17 +543,27 @@ function processQrScan(qrData) {
     }
     
     // Prevent duplicate scans
-    var scanStr = studentNo + '|' + fullName + '|' + eventId;
-    if (scanStr === _lastProcessedParams) {
-      console.warn('Duplicate scan detected');
-      return;
-    }
-    
-    _lastProcessedParams = scanStr;
-    console.log('Processing QR scan:', { studentNo, fullName, eventId });
-    
-    // Process the scan
-    handleQrScan(studentNo, fullName, eventId);
+
+var scanStr = studentNo + '|' + fullName + '|' + eventId;
+
+if (
+    _lastScan.value === scanStr &&
+    Date.now() - _lastScan.time < 5000
+) {
+    console.warn('Duplicate scan ignored');
+    return;
+}
+
+_lastScan.value = scanStr;
+_lastScan.time = Date.now();
+
+console.log('Processing QR scan:', {
+    studentNo,
+    fullName,
+    eventId
+});
+
+await handleQrScan(studentNo, fullName, eventId);
     
   } catch(err) {
     console.error('QR parse error:', err);
