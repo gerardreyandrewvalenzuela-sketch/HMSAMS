@@ -465,40 +465,40 @@ var imageData = ctx.getImageData(
   }
 );
         
-        if (qrCode && qrCode.data) {
+               if (qrCode && qrCode.data) {
           var qrData = qrCode.data;
-          
-          // Only process if different from last detected QR
-          if (qrData !== lastDetectedQR ||
-    Date.now() - lastDetectedTime > 2000) {
-             lastDetectedQR = qrData;
-             lastDetectedTime = Date.now();
 
-              hint.textContent = '✅ QR detected!';
-              status.textContent = 'Processing...';
-            
-            // Process the scan with small delay to show detection
-            
-await processQrScan(qrData);
+          if (
+            qrData !== lastDetectedQR ||
+            Date.now() - lastDetectedTime > 2000
+          ) {
+            lastDetectedQR = qrData;
+            lastDetectedTime = Date.now();
 
-status.textContent = '✅ Camera ready — point at QR code';
-hint.textContent = '↻ Point at QR code';
+            hint.textContent = '✅ QR detected!';
+            status.textContent = 'Processing...';
 
-await new Promise(resolve => setTimeout(resolve, 300));
-            
-            }
-          } else {
+            await processQrScan(qrData);
+
+            status.textContent = '✅ Camera ready — point at QR code';
+            hint.textContent = '↻ Point at QR code';
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        } else {
           hint.textContent = '↻ Point at QR code';
-         
         }
-      } catch(err) {
+
+      } catch (err) {
         console.error('QR scan error:', err);
       }
-    }
-    requestAnimationFrame(scanFrame);
-  }
-  scanFrame();
 
+      // Continue scanning
+      requestAnimationFrame(scanFrame);
+  }
+
+  // Start scanning
+  scanFrame();
 }
 /**
  * Parse QR code data and process scan
