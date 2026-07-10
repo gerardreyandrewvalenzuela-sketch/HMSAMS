@@ -6,28 +6,6 @@ function doGet(e) {
   var params = e.parameter;
   var action = params.action || '';
 
-  // Handle Quick Scan (QR code scan without browser redirect)
-  if (action === 'quickScan') {
-    var studentNo = params.id   || '';
-    var fullName  = params.name || '';
-    var eventId   = params.event || '';
-
-    // If no event specified, use the active event
-    if (!eventId) {
-      var activeEvent = getActiveEvent();
-      if (activeEvent) {
-        eventId = activeEvent['Event ID'];
-      }
-    }
-
-    var result = processScan(studentNo, fullName, eventId);
-    
-    // Return auto-closing HTML page
-    var html = '<html><head><meta charset="UTF-8"><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:' + (result.success ? '#dcfce7' : '#fee2e2') + '}.container{text-align:center;padding:20px}.icon{font-size:3rem;margin-bottom:10px}.status{font-size:1.3rem;font-weight:bold;margin-bottom:5px}.name{font-size:1rem;margin-bottom:10px}.meta{font-size:.9rem;color:#666;margin-bottom:20px}.auto-close{font-size:.9rem;color:#666}</style></head><body><div class="container"><div class="icon">' + (result.success ? '✅' : '⚠️') + '</div><div class="status">' + (result.success ? 'Scanned!' : 'Error') + '</div><div class="name">' + escapeHtml(result.student || '') + '</div><div class="meta">' + escapeHtml(result.message || result.time || '') + '</div><div class="auto-close">Closing in 2 seconds...</div></div><script>setTimeout(function(){window.close()},2000);</script></body></html>';
-    
-    return HtmlService.createHtmlOutput(html);
-  }
-
   // Handle QR scan redirect (student scans their QR code)
   if (action === 'scan') {
     var studentNo = params.id   || '';
@@ -160,14 +138,4 @@ function routePost(action, body) {
     default:
       return { success: false, message: 'Unknown action: ' + action };
   }
-}
-
-// ── HTML Escape Helper ──────────────────────────────────────
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
