@@ -1,12 +1,18 @@
 // ============================================================
 // scanner.js
 // QR Scanner & Live Attendance
+// HMSAMS v1.1
 // ============================================================
+
 
 
 // ============================================================
 // Constants
 // ============================================================
+
+var FEED_REFRESH_INTERVAL = 15000;
+var RESULT_HIDE_DELAY = 8000;
+
 
 
 // ============================================================
@@ -17,6 +23,7 @@ var _activeEvent = null;
 var _feedTimer = null;
 
 
+
 // ============================================================
 // Initialization
 // ============================================================
@@ -25,152 +32,232 @@ document.addEventListener('DOMContentLoaded', function () {
     setupPinGate(onPinUnlocked);
 });
 
-// ── Init ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  setupPinGate(onPinUnlocked);
-});
 
+
+/**
+ * Called after the administrator successfully enters the PIN.
+ */
 async function onPinUnlocked() {
-  document.getElementById('scanner-content').style.display = 'block';
 
-  // Check for scan params in URL (student scanned their QR)
-  var params     = new URLSearchParams(window.location.search);
-  var studentNo  = params.get('id')    || '';
-  var studentName= params.get('name')  || '';
-  var eventParam = params.get('event') || '';
+    document.getElementById('scanner-content').style.display = 'block';
 
-  // Load active event info
-  await loadActiveEvent();
+    // --------------------------------------------------------
+    // Read URL parameters
+    // --------------------------------------------------------
 
-  // If QR scan triggered this page load, process it
-  if (studentNo) {
-    await handleQrScan(studentNo, studentName, eventParam);
-    // Clean URL so refreshing doesn't re-submit
-    history.replaceState({}, '', 'scan.html');
-  }
+    var params = new URLSearchParams(window.location.search);
 
-  // Load live feed
-  loadLiveFeed();
-  startFeedRefresh();
+    var studentNo = params.get('id') || '';
+    var studentName = params.get('name') || '';
+    var eventParam = params.get('event') || '';
 
-  // Manual entry button
-  document.getElementById('manual-submit').addEventListener('click', handleManualEntry);
-  document.getElementById('manual-student-no').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleManualEntry();
-  });
+    // --------------------------------------------------------
+    // Load active event
+    // --------------------------------------------------------
 
-  // Refresh button
-  document.getElementById('refresh-feed').addEventListener('click', function() {
-    loadLiveFeed();
-  });
-}
+    await loadActiveEvent();
 
-/**
- * Loads the currently active event from the server
- * and updates the scanner header.
- */
+    // --------------------------------------------------------
+    // QR Scan
+    // --------------------------------------------------------
 
-// ============================================================
-// Event Loading
-// ============================================================
+    if (studentNo) {
 
-async function loadActiveEvent() {
-  try {
-    var res = await getActiveEvent();
-    _activeEvent = res.data || null;
+        await handleQrScan(
+            studentNo,
+            studentName,
+            eventParam
+        );
 
-    var nameEl    = document.getElementById('current-event-name');
-    var badgeEl   = document.getElementById('event-status-badge');
-    var warnEl    = document.getElementById('no-event-warning');
-    var instrEl   = document.getElementById('scanner-instructions');
+        // Prevent refresh from scanning again
+        history.replaceState({}, '', 'scan.html');
 
-    if (_activeEvent) {
-      nameEl.textContent   = _activeEvent['Event Name'];
-      badgeEl.style.display = 'inline-block';
-      warnEl.style.display  = 'none';
-      instrEl.style.display = 'block';
-    } else {
-      nameEl.textContent    = 'No active event';
-      badgeEl.style.display = 'none';
-      warnEl.style.display  = 'flex';
-      instrEl.style.display = 'none';
     }
-  } catch(err) {
-    console.error('Load event error:', err);
-  }
+
+    // --------------------------------------------------------
+    // Initial live feed
+    // --------------------------------------------------------
+
+    loadLiveFeed();
+    startFeedRefresh();
+
+    // --------------------------------------------------------
+    // Manual attendance
+    // --------------------------------------------------------
+
+    document
+        .getElementById('manual-submit')
+        .addEventListener('click', handleManualEntry);
+
+    document
+        .getElementById('manual-student-no')
+        .addEventListener('keydown', function (e) {
+
+            if (e.key === 'Enter') {
+                handleManualEntry();
+            }
+
+        });
+
+    // --------------------------------------------------------
+    // Manual refresh
+    // --------------------------------------------------------
+
+    document
+        .getElementById('refresh-feed')
+        .addEventListener('click', loadLiveFeed);
+
 }
 
+
+
 /**
- * Processes a QR code scan.
+ * Loads the currently active event.
  */
+async function loadActiveEvent() {
 
-// ============================================================
-// Attendance Processing
-// ============================================================
+    try {
 
-async function handleQrScan(studentNo, studentName, eventId) {
-  if (!_activeEvent && !eventId) {
-    showScanResult({
-      success: false,
-      status:  'error',
-      message: 'No active event. Please activate an event first.'
-    });
-    return;
-  }
+        var response = await getActiveEvent();
 
-  var eid = eventId || (_activeEvent ? _activeEvent['Event ID'] : '');
+        _activeEvent = response.data || null;
 
- await submitAttendance(studentNo, studentName, eid);
+        var nameEl = document.getElementById('current-event-name');
+        var badgeEl = document.getElementById('event-status-badge');
+        var warnEl = document.getElementById('no-event-warning');
+        var instructionEl = document.getElementById('scanner-instructions');
+
+        if (_activeEvent) {
+
+            nameEl.textContent = _activeEvent['Event Name'];
+
+            badgeEl.style.display = 'inline-block';
+            warnEl.style.display = 'none';
+            instructionEl.style.display = 'block';
+
+        } else {
+
+            nameEl.textContent = 'No active event';
+
+            badgeEl.style.display = 'none';
+            warnEl.style.display = 'flex';
+            instructionEl.style.display = 'none';
+
+        }
+
+    } catch (error) {
+
+        console.error('[Scanner] Failed to load active event.', error);
+
+    }
+
+}
+
+
 
 /**
- * Handles manual attendance entry.
+ * Processes attendance from a QR code.
+ */
+async function handleQrScan(studentNo, studentName, eventId) {
+
+    if (!_activeEvent && !eventId) {
+
+        showScanResult({
+            success: false,
+            status: 'error',
+            message: 'No active event. Please activate an event first.'
+        });
+
+        return;
+
+    }
+
+    var actualEventId = eventId ||
+        (_activeEvent ? _activeEvent['Event ID'] : '');
+
+    await submitAttendance(
+        studentNo,
+        studentName,
+        actualEventId
+    );
+
+}
+
+
+
+/**
+ * Handles manual attendance.
  */
 async function handleManualEntry() {
-  var studentNo   = document.getElementById('manual-student-no').value.trim();
-  var studentName = document.getElementById('manual-student-name').value.trim();
 
-  if (!studentNo || !studentName) {
-    showToast('Please enter both Student No. and Full Name.', 'error');
-    return;
-  }
+    var studentNo =
+        document.getElementById('manual-student-no').value.trim();
 
-  if (!_activeEvent) {
-    showToast('No active event.', 'error');
-    return;
-  }
+    var studentName =
+        document.getElementById('manual-student-name').value.trim();
 
-  var btn = document.getElementById('manual-submit');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recording...';
+    if (!studentNo || !studentName) {
 
-const result = await submitAttendance(
-    studentNo,
-    studentName,
-    _activeEvent['Event ID']
-);
+        showToast(
+            'Please enter both Student No. and Full Name.',
+            'error'
+        );
 
-if (result.success) {
+        return;
 
-    document.getElementById('manual-student-no').value = '';
-    document.getElementById('manual-student-name').value = '';
+    }
+
+    if (!_activeEvent) {
+
+        showToast(
+            'No active event.',
+            'error'
+        );
+
+        return;
+
+    }
+
+    var button = document.getElementById('manual-submit');
+
+    button.disabled = true;
+    button.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i> Recording...';
+
+    var result = await submitAttendance(
+        studentNo,
+        studentName,
+        _activeEvent['Event ID']
+    );
+
+    if (result.success) {
+
+        document.getElementById('manual-student-no').value = '';
+        document.getElementById('manual-student-name').value = '';
+
+    }
+
+    button.disabled = false;
+    button.innerHTML =
+        '<i class="fa-solid fa-check"></i> Record Attendance';
 
 }
 
-  btn.disabled = false;
-  btn.innerHTML = '<i class="fa-solid fa-check"></i> Record Attendance';
-}
+
 
 /**
- * Submits attendance to the backend and updates the UI.
- *
- * @param {string} studentNo
- * @param {string} studentName
- * @param {string} eventId
- * @returns {Promise<Object>}
+ * Sends attendance to the backend.
+ * Shared by QR Scan and Manual Entry.
  */
 async function submitAttendance(studentNo, studentName, eventId) {
+
     try {
-        const result = await processScan(studentNo, studentName, eventId);
+
+        var result = await processScan(
+            studentNo,
+            studentName,
+            eventId
+        );
 
         showScanResult(result);
 
@@ -182,9 +269,12 @@ async function submitAttendance(studentNo, studentName, eventId) {
 
     } catch (error) {
 
-        console.error('[Scanner] Attendance submission failed:', error);
+        console.error(
+            '[Scanner] Attendance submission failed.',
+            error
+        );
 
-        const failure = {
+        var failure = {
             success: false,
             status: 'error',
             message: 'Connection error. Please try again.'
@@ -193,107 +283,262 @@ async function submitAttendance(studentNo, studentName, eventId) {
         showScanResult(failure);
 
         return failure;
-    }
-}
 
-/**
- * Displays the scan result banner.
- */
+    }
+
+}
 
 // ============================================================
 // UI Rendering
 // ============================================================
 
-function showScanResult(res) {
-  var el      = document.getElementById('scan-result');
-  var iconEl  = document.getElementById('scan-result-icon');
-  var statusEl= document.getElementById('scan-result-status');
-  var nameEl  = document.getElementById('scan-result-name');
-  var metaEl  = document.getElementById('scan-result-meta');
+/**
+ * Displays the attendance result banner.
+ */
+function showScanResult(result) {
 
-  // Clear previous classes
-  el.className = 'scan-result';
+    var container = document.getElementById('scan-result');
+    var icon = document.getElementById('scan-result-icon');
+    var status = document.getElementById('scan-result-status');
+    var name = document.getElementById('scan-result-name');
+    var meta = document.getElementById('scan-result-meta');
 
-  var icon, statusText, cls;
+    container.className = 'scan-result';
 
-  if (!res.success) {
-    icon       = '⚠️';
-    statusText = res.status === 'Duplicate Scan' ? 'Already Scanned' : 'Error';
-    cls        = res.status === 'Duplicate Scan' ? 'duplicate' : 'error';
-  } else {
-    switch(res.status) {
-      case 'Time In':
-        icon = '✅'; statusText = 'TIME IN';  cls = 'timein';  break;
-      case 'Late':
-        icon = '🕐'; statusText = 'LATE';     cls = 'late';    break;
-      case 'Time Out':
-        icon = '👋'; statusText = 'TIME OUT'; cls = 'timeout'; break;
-      default:
-        icon = 'ℹ️'; statusText = res.status; cls = 'timein';
+    var iconText = '';
+    var statusText = '';
+    var cssClass = '';
+
+    if (!result.success) {
+
+        iconText = '⚠️';
+
+        if (result.status === 'Duplicate Scan') {
+            statusText = 'Already Scanned';
+            cssClass = 'duplicate';
+        } else {
+            statusText = 'Error';
+            cssClass = 'error';
+        }
+
+    } else {
+
+        switch (result.status) {
+
+            case 'Time In':
+                iconText = '✅';
+                statusText = 'TIME IN';
+                cssClass = 'timein';
+                break;
+
+            case 'Late':
+                iconText = '🕐';
+                statusText = 'LATE';
+                cssClass = 'late';
+                break;
+
+            case 'Time Out':
+                iconText = '👋';
+                statusText = 'TIME OUT';
+                cssClass = 'timeout';
+                break;
+
+            case 'No Timeout':
+                iconText = '⏰';
+                statusText = 'NO TIME OUT';
+                cssClass = 'notimeout';
+                break;
+
+            default:
+                iconText = 'ℹ️';
+                statusText = result.status || 'Success';
+                cssClass = 'timein';
+
+        }
+
     }
-  }
 
-  el.classList.add('scan-result--' + cls);
-  iconEl.textContent   = icon;
-  statusEl.textContent = statusText;
-  nameEl.textContent   = res.student || '';
-  metaEl.textContent   = res.time
-    ? formatDateTime(res.time) + ' — ' + (res.eventName || '')
-    : res.message || '';
+    container.classList.add('scan-result--' + cssClass);
 
-  el.style.display = 'block';
+    icon.textContent = iconText;
+    status.textContent = statusText;
+    name.textContent = result.student || '';
 
-  // Auto-hide after 8 seconds
-  clearTimeout(el._hideTimer);
-  el._hideTimer = setTimeout(function() {
-    el.style.display = 'none';
-  }, 8000);
+    if (result.time) {
+
+        meta.textContent =
+            formatDateTime(result.time) +
+            ' — ' +
+            (result.eventName || '');
+
+    } else {
+
+        meta.textContent = result.message || '';
+
+    }
+
+    container.style.display = 'block';
+
+    clearTimeout(container._hideTimer);
+
+    container._hideTimer = setTimeout(function () {
+
+        container.style.display = 'none';
+
+    }, RESULT_HIDE_DELAY);
+
 }
 
-// ── Live Feed ────────────────────────────────────────────────
+
 
 // ============================================================
 // Live Attendance Feed
 // ============================================================
 
+/**
+ * Loads attendance records for the active event.
+ */
 async function loadLiveFeed() {
-  if (!_activeEvent) return;
 
-  try {
-    var res = await getEventAttendance(_activeEvent['Event ID']);
-    if (!res.success) return;
-    renderFeed(res.data || []);
-  } catch(err) {
-    console.error('Feed error:', err);
-  }
+    if (!_activeEvent) {
+        return;
+    }
+
+    try {
+
+        var response = await getEventAttendance(
+            _activeEvent['Event ID']
+        );
+
+        if (!response.success) {
+            return;
+        }
+
+        renderFeed(response.data || []);
+
+    } catch (error) {
+
+        console.error(
+            '[Scanner] Failed to load attendance feed.',
+            error
+        );
+
+    }
+
 }
 
+
+
+/**
+ * Renders the live attendance table.
+ */
 function renderFeed(records) {
-  var tbody = document.getElementById('attendance-tbody');
 
-  if (!records.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No records yet.</td></tr>';
-    return;
-  }
+    var tbody = document.getElementById('attendance-tbody');
 
-  // Sort by most recent first (Time In column)
-  records.sort(function(a, b) {
-    return new Date(b['Time In']) - new Date(a['Time In']);
-  });
+    if (!records.length) {
 
-  tbody.innerHTML = records.map(function(r) {
-    return '<tr>' +
-      '<td>' + (r['Full Name'] || r['Student No']) + '</td>' +
-      '<td>' + statusBadge(r['Attendance Status']) + '</td>' +
-      '<td>' + formatTime(r['Time In'])  + '</td>' +
-      '<td>' + formatTime(r['Time Out']) + '</td>' +
-    '</tr>';
-  }).join('');
+        tbody.innerHTML =
+            '<tr><td colspan="4" class="text-center">No records yet.</td></tr>';
+
+        return;
+
+    }
+
+    records.sort(function (a, b) {
+
+        return new Date(b['Time In']) - new Date(a['Time In']);
+
+    });
+
+    tbody.innerHTML = records.map(function (record) {
+
+        return [
+            '<tr>',
+            '<td>',
+            (record['Full Name'] || record['Student No']),
+            '</td>',
+            '<td>',
+            statusBadge(record['Attendance Status']),
+            '</td>',
+            '<td>',
+            formatTime(record['Time In']),
+            '</td>',
+            '<td>',
+            formatTime(record['Time Out']),
+            '</td>',
+            '</tr>'
+        ].join('');
+
+    }).join('');
+
 }
 
+// ============================================================
+// Feed Refresh
+// ============================================================
+
+/**
+ * Starts automatic refresh of the live attendance feed.
+ */
 function startFeedRefresh() {
-  clearInterval(_feedTimer);
-  _feedTimer = setInterval(function() {
-    loadActiveEvent().then(loadLiveFeed);
-  }, 15000); // refresh every 15s
+
+    // Prevent multiple timers
+    stopFeedRefresh();
+
+    _feedTimer = setInterval(async function () {
+
+        try {
+
+            await loadActiveEvent();
+            await loadLiveFeed();
+
+        } catch (error) {
+
+            console.error(
+                '[Scanner] Feed refresh failed.',
+                error
+            );
+
+        }
+
+    }, FEED_REFRESH_INTERVAL);
+
 }
+
+
+
+/**
+ * Stops the automatic refresh timer.
+ */
+function stopFeedRefresh() {
+
+    if (_feedTimer) {
+
+        clearInterval(_feedTimer);
+        _feedTimer = null;
+
+    }
+
+}
+
+
+
+// ============================================================
+// Cleanup
+// ============================================================
+
+/**
+ * Prevent memory leaks when leaving the page.
+ */
+window.addEventListener('beforeunload', function () {
+
+    stopFeedRefresh();
+
+});
+
+
+
+// ============================================================
+// End of File
+// ============================================================
