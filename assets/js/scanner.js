@@ -309,11 +309,23 @@ async function initializeCamera() {
     video.srcObject = _cameraStream;
     
     scanner.style.display = 'block';
-    status.textContent = '✅ Camera ready — point at QR code';
+    status.textContent = 'Starting camera...';
     _scannerActive = true;
     
-    // Start processing frames
-    startScannerLoop();
+    // Wait for video to be ready before starting scan loop
+    video.onloadedmetadata = function() {
+      video.play();
+      status.textContent = '✅ Camera ready — point at QR code';
+      // Small delay to ensure video is fully playing
+      setTimeout(startScannerLoop, 500);
+    };
+    
+    // Fallback timeout in case onloadedmetadata doesn't fire
+    setTimeout(function() {
+      if (_scannerActive && video.videoWidth === 0) {
+        startScannerLoop();
+      }
+    }, 2000);
     
   } catch(err) {
     if (err.name === 'NotAllowedError') {
@@ -335,25 +347,39 @@ function startScannerLoop() {
   var status = document.getElementById('scanner-status');
   var hint = document.getElementById('scanner-hint');
   
-  if (!canvas) return;
+  if (!canvas || !video) return;
   
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
+  
+  // Safety counter to prevent infinite waiting
+  var readyAttempts = 0;
   
   function scanFrame() {
     if (!_scannerActive) return;
     
-    // Set canvas size to match video
-    if (canvas.width !== video.videoWidth) {
-      canvas.width = video.videoWidth;
+    // Wait for video to have valid dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      readyAttempts++;
+      if (readyAttempts < 100) {
+        requestAnimationFrame(scanFrame);
+        return;
+      }
     }
-    if (canvas.height !== video.videoHeight) {
-      canvas.height = video.videoHeight;
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Safety check - if canvas still has no dimensions, skip frame
+    if (canvas.width === 0 || canvas.height === 0) {
+      requestAnimationFrame(scanFrame);
+      return;
     }
     
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Get image data
+    // Get image data (now safe since canvas has dimensions)
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
     // Process with jsQR
