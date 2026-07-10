@@ -236,7 +236,8 @@ function renderFeed(records) {
 
 function startFeedRefresh() {
   clearInterval(_feedTimer);
+  // Refresh every 3 seconds to catch quick scan updates (was 15s)
   _feedTimer = setInterval(function() {
     loadActiveEvent().then(loadLiveFeed);
-  }, 15000); // refresh every 15s
+  }, 3000);
 }

@@ -2,8 +2,8 @@
 // qr.js — QR code generator page
 // ============================================================
 
-// Base URL for QR scan links
-var QR_BASE_URL = 'https://gerardreyandrewvalenzuela-sketch.github.io/HMSAMS/scan.html';
+// Base URL for QR scan links — Points directly to Apps Script API
+var QR_BASE_URL = 'https://script.google.com/macros/s/AKfycbxfP7YBAf3IF8H7D4Gm24CDuS9TC-w6zisQCxsUD_0MisApMFy1HXtftx09LglXmjAnTg/exec';
 
 var _allStudents = [];
 
@@ -81,6 +81,8 @@ function generateQRCodes() {
     var item = buildQRItem(student);
     grid.appendChild(item);
   });
+
+  showToast('✅ QR codes generated. Use camera to scan directly — no PIN needed!', 'success');
 }
 
 function buildQRItem(student) {
@@ -98,9 +100,10 @@ function buildQRItem(student) {
   ) + ' Year' : '';
   var block = student['Block'] ? 'Block ' + student['Block'] : '';
 
-  // Build the QR scan URL
+  // Build the QR scan URL — points to Apps Script API
   var url = QR_BASE_URL +
-    '?id='   + encodeURIComponent(studentNo) +
+    '?action=quickScan' +
+    '&id='   + encodeURIComponent(studentNo) +
     '&name=' + encodeURIComponent(fullName);
 
   // Build ID card container
