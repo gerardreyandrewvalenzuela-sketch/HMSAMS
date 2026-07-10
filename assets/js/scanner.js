@@ -500,7 +500,6 @@ await new Promise(resolve => setTimeout(resolve, 300));
   
     requestAnimationFrame(scanFrame);
   }
-  scanFrame();
 /**
  * Parse QR code data and process scan
  * QR format: scan.html?id=2024-0001&name=John+Doe
