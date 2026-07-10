@@ -488,7 +488,7 @@ await new Promise(resolve => setTimeout(resolve, 300));
             
             }
           }
-        } else {
+            else {
           hint.textContent = '↻ Point at QR code';
          
         }
@@ -502,7 +502,6 @@ await new Promise(resolve => setTimeout(resolve, 300));
   }
   
   scanFrame();
-}
 
 /**
  * Parse QR code data and process scan
