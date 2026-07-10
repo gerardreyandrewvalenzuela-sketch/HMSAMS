@@ -628,6 +628,100 @@ img { max-width: 100%; }
   padding-top: 4px;
 }
 
+/* ── Camera Scanner ─────────────────────────────────────────── */
+.camera-scanner {
+  background: var(--clr-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--clr-border);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.camera-scanner__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--clr-bg);
+  border-bottom: 1px solid var(--clr-border);
+}
+.camera-scanner__header h3 {
+  font-size: .95rem;
+  font-weight: 700;
+  margin: 0;
+}
+.camera-scanner__container {
+  position: relative;
+  background: #000;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  overflow: hidden;
+}
+#scanner-video,
+#scanner-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.camera-scanner__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,.3) 100%);
+}
+.camera-scanner__crosshair {
+  width: 120px;
+  height: 120px;
+  border: 3px solid rgba(37, 99, 235, 0.6);
+  border-radius: 8px;
+  position: relative;
+  margin-bottom: 16px;
+}
+.camera-scanner__crosshair::before,
+.camera-scanner__crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(37, 99, 235, 0.6);
+}
+.camera-scanner__crosshair::before {
+  width: 100%;
+  height: 2px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+.camera-scanner__crosshair::after {
+  width: 2px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+.camera-scanner__hint {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: .9rem;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+.camera-scanner__info {
+  padding: 12px 14px;
+  background: var(--clr-bg);
+  border-top: 1px solid var(--clr-border);
+  font-size: .85rem;
+}
+.camera-scanner__info p {
+  margin: 0;
+}
+
 /* ── Alerts ─────────────────────────────────────────────────── */
 .alert {
   display: flex;
