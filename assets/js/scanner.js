@@ -440,7 +440,6 @@ if (
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     // Process every 2nd frame for speed (skip every other frame)
-   {
       try {
         // Get image data (now safe since canvas has dimensions)
 const scanSize = Math.floor(
