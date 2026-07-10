@@ -10,6 +10,7 @@ var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 var _cameraStream = null;        // Track active camera stream
 var _scannerActive = false;      // Track if scanner is running
  var _scannerLoopRunning = false;
+var _lastDetectedQR = "";
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -303,8 +304,8 @@ async function initializeCamera() {
     _cameraStream = await navigator.mediaDevices.getUserMedia({
 video: {
     facingMode: { ideal: 'environment' },
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
+    width: { ideal: 640 },
+    height: { ideal: 480 }
 },
       audio: false
     });
@@ -312,6 +313,18 @@ video: {
     // Set video source
     var video = document.getElementById('scanner-video');
     video.srcObject = _cameraStream;
+   
+    const track = _cameraStream.getVideoTracks()[0];
+
+    if (track) {
+        track.applyConstraints({
+            advanced: [{
+                focusMode: "continuous"
+            }]
+        }).catch(function(err) {
+            console.log("Continuous focus not supported.", err);
+        });
+}
     
     scanner.style.display = 'block';
     status.textContent = 'Starting camera...';
@@ -322,7 +335,7 @@ video: {
       video.play();
       status.textContent = '✅ Camera ready — point at QR code';
       // Small delay to ensure video is fully playing
-      setTimeout(startScannerLoop, 500);
+     requestAnimationFrame(startScannerLoop);
     };
     
     // Fallback timeout in case onloadedmetadata doesn't fire
@@ -363,9 +376,7 @@ function startScannerLoop() {
 }
   
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
-  var frameCount = 0;
-  var lastDetectedQR = '';
-
+ 
   
   // Safety counter to prevent infinite waiting
   var readyAttempts = 0;
@@ -386,8 +397,8 @@ function startScannerLoop() {
     }
     
     // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = 320;
+    canvas.height = 320;
     
     // Safety check - if canvas still has no dimensions, skip frame
     if (canvas.width === 0 || canvas.height === 0) {
@@ -396,41 +407,54 @@ function startScannerLoop() {
     }
     
     // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+var s = Math.min(video.videoWidth, video.videoHeight);
+
+ctx.drawImage(
+    video,
+    (video.videoWidth - s) / 2,
+    (video.videoHeight - s) / 2,
+    s,
+    s,
+    0,
+    0,
+    320,
+    320
+);
     
     // Process every 2nd frame for speed (skip every other frame)
-    if (frameCount % 2 === 0) {
+   {
       try {
         // Get image data (now safe since canvas has dimensions)
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         
         // Process with jsQR
-        var qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-        
+        var qrCode = jsQR(imageData.data, imageData.width, imageData.height,
+                          {
+                             inversionAttempts: "attemptBoth"
+                          }
+                       );
+       
         if (qrCode && qrCode.data) {
           var qrData = qrCode.data;
           
           // Only process if different from last detected QR
-          if (qrData !== lastDetectedQR) {
-            lastDetectedQR = qrData;
+          if (qrData !== _lastDetectedQR) {
+            _lastDetectedQR = qrData;
             hint.textContent = '✅ QR detected! Processing...';
             status.textContent = 'Processing scan...';
             
             // Process the scan with small delay to show detection
-            setTimeout(function() {
-              processQrScan(qrData);
-            }, 100);
+          processQrScan(qrData);
           }
         } else {
           hint.textContent = '↻ Point at QR code';
-          lastDetectedQR = '';
+          _lastDetectedQR = '';
         }
       } catch(err) {
         console.error('QR scan error:', err);
       }
     }
     
-    frameCount++;
     requestAnimationFrame(scanFrame);
   }
   
@@ -494,8 +518,6 @@ async function processQrScan(qrData) {
 
         console.log("Processing QR:", studentNo);
 
-        _scannerActive = false;
-
         await handleQrScan(studentNo, fullName, eventId);
 
     }
@@ -505,21 +527,19 @@ async function processQrScan(qrData) {
 
     }
 finally {
-
-    setTimeout(function () {
-
-        _scannerActive = true;
+ 
         _isScanProcessing = false;
+
+     setTimeout(function () {
+      
         _lastProcessedParams = '';
 
-        startScannerLoop();
-
-    }, 1200);
+    }, 1000);
 
 }
 
 }
-    
+   
 
 
 /**
@@ -540,3 +560,4 @@ function closeCamera() {
   // Hide scanner
   document.getElementById('camera-scanner').style.display = 'none';
 }
+
