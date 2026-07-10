@@ -9,6 +9,7 @@ var _isScanProcessing = false;  // Prevent duplicate rapid scans
 var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 var _cameraStream = null;        // Track active camera stream
 var _scannerActive = false;      // Track if scanner is running
+ var _scannerLoopRunning = false;
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -300,7 +301,11 @@ async function initializeCamera() {
     
     // Request camera stream
     _cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
+video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+},
       audio: false
     });
     
@@ -342,22 +347,34 @@ async function initializeCamera() {
  * Continuously process video frames to detect QR codes
  */
 function startScannerLoop() {
+  
+      if (_scannerLoopRunning) return;
+    _scannerLoopRunning = true;
+ 
+  
   var video = document.getElementById('scanner-video');
   var canvas = document.getElementById('scanner-canvas');
   var status = document.getElementById('scanner-status');
   var hint = document.getElementById('scanner-hint');
   
-  if (!canvas || !video) return;
+ if (!canvas || !video) {
+    _scannerLoopRunning = false;
+    return;
+}
   
   var ctx = canvas.getContext('2d', { willReadFrequently: true });
   var frameCount = 0;
   var lastDetectedQR = '';
+
   
   // Safety counter to prevent infinite waiting
   var readyAttempts = 0;
   
   function scanFrame() {
-    if (!_scannerActive) return;
+ if (!_scannerActive) {
+    _scannerLoopRunning = false;
+    return;
+}
     
     // Wait for video to have valid dimensions
     if (video.videoWidth === 0 || video.videoHeight === 0) {
@@ -424,61 +441,92 @@ function startScannerLoop() {
  * Parse QR code data and process scan
  * QR format: scan.html?id=2024-0001&name=John+Doe
  */
-function processQrScan(qrData) {
-  if (_isScanProcessing) return;
-  
-  try {
-    var studentNo = '';
-    var fullName = '';
-    var eventId = '';
-    
-    // Try to parse as URL first
+async function processQrScan(qrData) {
+
+    if (_isScanProcessing) return;
+
+    _isScanProcessing = true;
+
     try {
-      var url = new URL(qrData, window.location.origin);
-      studentNo = url.searchParams.get('id') || '';
-      fullName = url.searchParams.get('name') || '';
-      eventId = url.searchParams.get('event') || '';
-    } catch(e) {
-      // If URL parsing fails, try to extract from query string
-      // QR data might be: "scan.html?id=2024-0001&name=John+Doe"
-      if (qrData.indexOf('id=') !== -1) {
-        var idMatch = qrData.match(/[?&]id=([^&]+)/);
-        var nameMatch = qrData.match(/[?&]name=([^&]+)/);
-        var eventMatch = qrData.match(/[?&]event=([^&]+)/);
-        
-        if (idMatch) studentNo = decodeURIComponent(idMatch[1]);
-        if (nameMatch) fullName = decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ');
-        if (eventMatch) eventId = decodeURIComponent(eventMatch[1]);
-      }
+
+        var studentNo = '';
+        var fullName = '';
+        var eventId = '';
+
+        // Try to parse as URL first
+        try {
+
+            var url = new URL(qrData, window.location.origin);
+
+            studentNo = url.searchParams.get('id') || '';
+            fullName  = url.searchParams.get('name') || '';
+            eventId   = url.searchParams.get('event') || '';
+
+        } catch(e) {
+
+            if (qrData.indexOf('id=') !== -1) {
+
+                var idMatch    = qrData.match(/[?&]id=([^&]+)/);
+                var nameMatch  = qrData.match(/[?&]name=([^&]+)/);
+                var eventMatch = qrData.match(/[?&]event=([^&]+)/);
+
+                if (idMatch) studentNo = decodeURIComponent(idMatch[1]);
+                if (nameMatch) fullName = decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ');
+                if (eventMatch) eventId = decodeURIComponent(eventMatch[1]);
+
+            }
+
+        }
+
+        if (!studentNo) {
+            console.warn('No student ID found in QR:', qrData);
+            return;
+        }
+
+        var scanStr = studentNo + "|" + fullName + "|" + eventId;
+
+        if (scanStr === _lastProcessedParams) {
+            console.warn("Duplicate scan ignored.");
+            return;
+        }
+
+        _lastProcessedParams = scanStr;
+
+        console.log("Processing QR:", studentNo);
+
+        _scannerActive = false;
+
+        await handleQrScan(studentNo, fullName, eventId);
+
     }
-    
-    if (!studentNo) {
-      console.warn('No student ID found in QR:', qrData);
-      return;
+    catch(err) {
+
+        console.error("QR parse error:", err);
+
     }
-    
-    // Prevent duplicate scans
-    var scanStr = studentNo + '|' + fullName + '|' + eventId;
-    if (scanStr === _lastProcessedParams) {
-      console.warn('Duplicate scan detected');
-      return;
-    }
-    
-    _lastProcessedParams = scanStr;
-    console.log('Processing QR scan:', { studentNo, fullName, eventId });
-    
-    // Process the scan
-    handleQrScan(studentNo, fullName, eventId);
-    
-  } catch(err) {
-    console.error('QR parse error:', err);
-  }
+finally {
+
+    setTimeout(function () {
+
+        _scannerActive = true;
+        _isScanProcessing = false;
+        _lastProcessedParams = '';
+
+        startScannerLoop();
+
+    }, 1200);
+
 }
+
+}
+    
+
 
 /**
  * Close camera and cleanup
  */
 function closeCamera() {
+  _scannerLoopRunning = false;
   _scannerActive = false;
   
   // Stop all tracks
