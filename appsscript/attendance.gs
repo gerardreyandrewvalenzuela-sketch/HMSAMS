@@ -9,12 +9,10 @@ var ATT_COLS = {
   EVENT_NAME: 2,
   STUDENT_NO: 3,
   FULL_NAME:  4,
-  YEAR_LEVEL: 5,
-  BLOCK:      6,
-  TIME_IN:    7,
-  TIME_OUT:   8,
-  STATUS:     9,
-  SCAN_COUNT: 10
+  TIME_IN:    5,
+  TIME_OUT:   6,
+  STATUS:     7,
+  SCAN_COUNT: 8
 };
 
 function generateLogId() {
@@ -92,8 +90,6 @@ function processScan(studentNo, fullName, eventId) {
     event['Event Name'],
     studentNo,
     fullName,
-    student['Year Level'] || '',
-    student['Block'] || '',
     timeInStr,
     '',
     attendanceStatus,
@@ -133,13 +129,57 @@ function findAttendanceRowIndex(studentNo, eventId) {
 }
 
 // Parse event date + time string into a Date object
+// Handles both plain "HH:mm" strings and Google Sheets 1899 date serials
 function parseEventTime(dateStr, timeStr) {
   try {
-    var combined = dateStr + ' ' + timeStr;
-    return new Date(combined);
+    // If timeStr is a Date object (Google Sheets stores time-only as 1899 date)
+    var timeObj = new Date(timeStr);
+    var hours, minutes;
+
+    if (!isNaN(timeObj) && timeObj.getFullYear() === 1899) {
+      hours   = timeObj.getUTCHours();
+      minutes = timeObj.getUTCMinutes();
+    } else if (typeof timeStr === 'string' && timeStr.indexOf(':') !== -1) {
+      var parts = timeStr.split(':');
+      hours   = parseInt(parts[0]);
+      minutes = parseInt(parts[1]);
+    } else {
+      return null;
+    }
+
+    // Parse the date
+    var dateObj = new Date(dateStr);
+    if (isNaN(dateObj)) return null;
+
+    dateObj.setHours(hours, minutes, 0, 0);
+    return dateObj;
   } catch(e) {
     return null;
   }
+}
+
+// Format a Google Sheets time value to HH:MM string
+function formatSheetTime(timeVal) {
+  if (!timeVal) return '—';
+  var d = new Date(timeVal);
+  if (!isNaN(d) && d.getFullYear() === 1899) {
+    var h = d.getUTCHours();
+    var m = d.getUTCMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  }
+  return String(timeVal);
+}
+
+// Format a Google Sheets date value to readable string
+function formatSheetDate(dateVal) {
+  if (!dateVal) return '—';
+  var d = new Date(dateVal);
+  if (!isNaN(d)) {
+    return d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  return String(dateVal);
 }
 
 // Get attendance records for a specific event (for live feed)
