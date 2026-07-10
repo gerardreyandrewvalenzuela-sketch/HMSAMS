@@ -81,6 +81,8 @@ function generateQRCodes() {
     var item = buildQRItem(student);
     grid.appendChild(item);
   });
+
+  showToast('✅ QR codes generated. Use camera to scan directly — no PIN needed!', 'success');
 }
 
 function buildQRItem(student) {
