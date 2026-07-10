@@ -6,6 +6,8 @@
   <title>HMSAMS — Scanner</title>
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- QR Code Scanner Library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body>
 
@@ -51,6 +53,27 @@
       <div class="scan-result__details" id="scan-result-details"></div>
     </div>
 
+    <!-- Live Camera QR Scanner -->
+    <div class="camera-scanner" id="camera-scanner" style="display:none;">
+      <div class="camera-scanner__header">
+        <h3>QR Code Scanner</h3>
+        <button class="btn btn--ghost btn--sm" id="btn-close-camera">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
+      </div>
+      <div class="camera-scanner__container">
+        <video id="scanner-video" playsinline muted autoplay></video>
+        <canvas id="scanner-canvas" style="display:none;"></canvas>
+        <div class="camera-scanner__overlay">
+          <div class="camera-scanner__crosshair"></div>
+          <p class="camera-scanner__hint" id="scanner-hint">Point at QR code</p>
+        </div>
+      </div>
+      <div class="camera-scanner__info">
+        <p id="scanner-status" class="text-muted">Initializing camera...</p>
+      </div>
+    </div>
+
     <!-- Event Info -->
     <div class="event-info-bar" id="event-info-bar">
       <div id="event-info-text">
@@ -73,14 +96,19 @@
         <i class="fa-solid fa-mobile-screen-button"></i>
       </div>
       <h3>Quick Scan Mode</h3>
+      <div style="margin: 1rem 0;">
+        <button class="btn btn--primary btn--full" id="btn-open-camera">
+          <i class="fa-solid fa-camera"></i> Open Camera Scanner
+        </button>
+      </div>
       <ol>
-        <li>Make sure an event is active</li>
-        <li>Have the student open their QR code</li>
-        <li>Use your phone's camera app to scan it</li>
-        <li>The result will appear here automatically</li>
+        <li>Click "Open Camera Scanner" above</li>
+        <li>Allow camera access when prompted</li>
+        <li>Point camera at QR code on student's phone</li>
+        <li>Scan will process automatically</li>
         <li><strong>Scan the same QR code again for Time Out</strong></li>
       </ol>
-      <p class="text-muted">💡 Keep this page open for continuous scanning without reopening</p>
+      <p class="text-muted">💡 No redirects needed — everything happens on this page</p>
 
       <!-- Manual Entry Fallback -->
       <div class="manual-entry">
