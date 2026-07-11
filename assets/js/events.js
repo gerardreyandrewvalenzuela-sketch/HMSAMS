@@ -170,6 +170,35 @@ async function changeStatus(eventId, status) {
   }
 }
 
+function toTimeInputValue(val) {
+  if (!val) return '';
+
+  var d = new Date(val);
+
+  if (!isNaN(d)) {
+    return String(d.getUTCHours()).padStart(2, '0') + ':' +
+           String(d.getUTCMinutes()).padStart(2, '0');
+  }
+
+  if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) {
+    return val.substring(0, 5);
+  }
+
+  return '';
+}
+function toDateInputValue(val) {
+  if (!val) return '';
+
+  var d = new Date(val);
+
+  if (!isNaN(d)) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  return '';
+}
 // ── Modal ─────────────────────────────────────────────────────
 function openModal(ev) {
   var modal = document.getElementById('event-modal');
@@ -179,11 +208,11 @@ function openModal(ev) {
     document.getElementById('modal-title').textContent    = 'Edit Event';
     document.getElementById('edit-event-id').value        = ev['Event ID'];
     document.getElementById('event-name').value           = ev['Event Name'];
-    document.getElementById('event-date').value           = ev['Date'];
-    document.getElementById('event-reg-open').value       = ev['Reg Open'];
-    document.getElementById('event-reg-close').value      = ev['Reg Close'];
-    document.getElementById('event-timeout-start').value  = ev['Timeout Start'];
-    document.getElementById('event-timeout-deadline').value = ev['Timeout Deadline'];
+    document.getElementById('event-date').value = toDateInputValue(ev['Date']);
+    document.getElementById('event-reg-open').value = toTimeInputValue(ev['Reg Open']);
+    document.getElementById('event-reg-close').value = toTimeInputValue(ev['Reg Close']);
+    document.getElementById('event-timeout-start').value = toTimeInputValue(ev['Timeout Start']);
+    document.getElementById('event-timeout-deadline').value = toTimeInputValue(ev['Timeout Deadline']);
   } else {
     document.getElementById('modal-title').textContent = 'New Event';
     document.getElementById('edit-event-id').value      = '';
@@ -194,9 +223,8 @@ function openModal(ev) {
     document.getElementById('event-timeout-start').value = '';
     document.getElementById('event-timeout-deadline').value = '';
   }
-
-  modal.style.display = 'flex';
 }
+
 
 function closeModal() {
   document.getElementById('event-modal').style.display = 'none';
