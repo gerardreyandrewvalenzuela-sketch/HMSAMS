@@ -177,8 +177,8 @@ function toTimeInputValue(val) {
   var d = new Date(val);
 
   if (!isNaN(d)) {
-    return String(d.getUTCHours()).padStart(2, '0') + ':' +
-           String(d.getUTCMinutes()).padStart(2, '0');
+     return String(d.getHours()).padStart(2, '0') + ':' +
+       String(d.getMinutes()).padStart(2, '0');
   }
 
   if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) {
@@ -319,23 +319,26 @@ function formatEventDate(val) {
 
 function formatEventTime(val) {
   if (!val) return '—';
+
+  // Handle plain HH:mm strings
+  if (typeof val === 'string') {
+    var m = val.match(/^(\d{1,2}):(\d{2})/);
+    if (m) {
+      var h = parseInt(m[1], 10);
+      var min = m[2];
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return h + ':' + min + ' ' + ampm;
+    }
+  }
+
   var d = new Date(val);
-  // Google Sheets stores time-only as a 1899 date
-  if (!isNaN(d) && d.getFullYear() === 1899) {
-    var h = d.getUTCHours();
-    var m = d.getUTCMinutes();
-    var ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  if (!isNaN(d)) {
+    return d.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit'
+    });
   }
-  // Plain HH:mm string
-  if (typeof val === 'string' && val.indexOf(':') !== -1) {
-    var parts = val.split(':');
-    var h2 = parseInt(parts[0]);
-    var m2 = parseInt(parts[1]);
-    var ampm2 = h2 >= 12 ? 'PM' : 'AM';
-    h2 = h2 % 12 || 12;
-    return h2 + ':' + (m2 < 10 ? '0' + m2 : m2) + ' ' + ampm2;
-  }
-  return escHtml(String(val));
+
+  return '—';
 }
