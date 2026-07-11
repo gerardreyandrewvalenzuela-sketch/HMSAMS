@@ -71,7 +71,7 @@ function buildEventCard(ev) {
     '<div class="event-card__meta">' +
       '<span><i class="fa-solid fa-calendar fa-xs"></i> ' + formatEventDate(ev['Date']) + '</span>' +
       '<span><i class="fa-solid fa-door-open fa-xs"></i> Reg: ' + formatEventTime(ev['Reg Open']) + ' – ' + formatEventTime(ev['Reg Close']) + '</span>' +
-      '<span><i class="fa-solid fa-clock fa-xs"></i> Timeout: ' + formatEventTime(ev['Timeout Deadline']) + '</span>' +
+      '<span><i class="fa-solid fa-clock fa-xs"></i> Timeout: ' + formatEventTime(ev['Timeout Start']) + ' – ' + formatEventTime(ev['Timeout Deadline']) + '</span>' +
     '</div>' +
     '<div class="event-card__actions">' +
       activateBtn +
@@ -182,7 +182,8 @@ function openModal(ev) {
     document.getElementById('event-date').value           = ev['Date'];
     document.getElementById('event-reg-open').value       = ev['Reg Open'];
     document.getElementById('event-reg-close').value      = ev['Reg Close'];
-    document.getElementById('event-timeout').value        = ev['Timeout Deadline'];
+    document.getElementById('event-timeout-start').value  = ev['Timeout Start'];
+    document.getElementById('event-timeout-deadline').value = ev['Timeout Deadline'];
   } else {
     document.getElementById('modal-title').textContent = 'New Event';
     document.getElementById('edit-event-id').value      = '';
@@ -190,7 +191,8 @@ function openModal(ev) {
     document.getElementById('event-date').value         = '';
     document.getElementById('event-reg-open').value     = '';
     document.getElementById('event-reg-close').value    = '';
-    document.getElementById('event-timeout').value      = '';
+    document.getElementById('event-timeout-start').value = '';
+    document.getElementById('event-timeout-deadline').value = '';
   }
 
   modal.style.display = 'flex';
@@ -208,10 +210,11 @@ async function saveEvent() {
   var date    = document.getElementById('event-date').value;
   var regOpen = document.getElementById('event-reg-open').value;
   var regClose= document.getElementById('event-reg-close').value;
-  var timeout = document.getElementById('event-timeout').value;
+  var timeoutStart = document.getElementById('event-timeout-start').value;
+  var timeoutDeadline = document.getElementById('event-timeout-deadline').value;
   var editId  = document.getElementById('edit-event-id').value;
 
-  if (!name || !date || !regOpen || !regClose || !timeout) {
+if (!name || !date || !regOpen || !regClose || !timeoutStart || !timeoutDeadline) {
     errorEl.textContent = 'All fields are required.';
     return;
   }
@@ -219,8 +222,13 @@ async function saveEvent() {
     errorEl.textContent = 'Reg Close must be after Reg Open.';
     return;
   }
-  if (timeout <= regClose) {
-    errorEl.textContent = 'Timeout Deadline must be after Reg Close.';
+  if (timeoutStart <= regClose) {
+    errorEl.textContent = 'Timeout Start must be after Registration Close.';
+    return;
+  }
+
+  if (timeoutDeadline <= timeoutStart) {
+    errorEl.textContent = 'Timeout Deadline must be after Timeout Start.';
     return;
   }
 
@@ -228,13 +236,16 @@ async function saveEvent() {
   saveBtn.disabled = true;
 
   var data = {
-    eventName:       name,
-    date:            date,
-    regOpen:         regOpen,
-    regClose:        regClose,
-    timeoutDeadline: timeout,
-    status:          editId
-      ? (_allEvents.find(function(e) { return e['Event ID'] === editId; }) || {})['Status'] || 'Inactive'
+    eventName: name,
+    date: date,
+    regOpen: regOpen,
+    regClose: regClose,
+    timeoutStart: timeoutStart,
+    timeoutDeadline: timeoutDeadline,
+    status: editId
+      ? (_allEvents.find(function(e) {
+            return e['Event ID'] === editId;
+        }) || {})['Status'] || 'Inactive'
       : 'Inactive'
   };
 
