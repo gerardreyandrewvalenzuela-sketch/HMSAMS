@@ -324,7 +324,7 @@ async function initializeCamera() {
             }
         );
 
-        status.textContent = "✅ Camera ready";
+       status.textContent = "✅ Camera ready — point at QR code";
 
     } catch (e) {
 
