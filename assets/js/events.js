@@ -223,6 +223,7 @@ function openModal(ev) {
     document.getElementById('event-timeout-start').value = '';
     document.getElementById('event-timeout-deadline').value = '';
   }
+    modal.style.display = 'flex';
 }
 
 
