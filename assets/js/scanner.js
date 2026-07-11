@@ -304,7 +304,7 @@ async function initializeCamera() {
 
     _scannerActive = true;
 
-    _codeReader = new BrowserMultiFormatReader();
+   _codeReader = new ZXingBrowser.BrowserMultiFormatReader();
 
     try {
 
@@ -412,7 +412,7 @@ finally {
       
         _lastProcessedParams = '';
 
-    }, 1000);
+    }, 400);
 
 }
 
