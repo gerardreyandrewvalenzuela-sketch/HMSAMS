@@ -86,9 +86,10 @@ function buildEventCard(ev) {
 // ── Bind UI ──────────────────────────────────────────────────
 function bindUI() {
   // New event button
-  document.getElementById('btn-new-event').addEventListener('click', function() {
-    openModal(null);
-  });
+document.getElementById('btn-new-event').addEventListener('click', function() {
+  console.log("New Event clicked");
+  openModal(null);
+});
 
   // Tab filters
   document.querySelectorAll('.tab-bar__item').forEach(function(tab) {
