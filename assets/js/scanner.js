@@ -428,8 +428,23 @@ function closeCamera() {
     _scannerActive = false;
 
     if (_codeReader) {
-        _codeReader.reset();
+        try {
+            _codeReader.stopContinuousDecode();
+        } catch (e) {
+            console.log("Scanner already stopped.");
+        }
+
         _codeReader = null;
+    }
+
+    var video = document.getElementById("scanner-video");
+
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(function(track) {
+            track.stop();
+        });
+
+        video.srcObject = null;
     }
 
     document.getElementById("camera-scanner").style.display = "none";
