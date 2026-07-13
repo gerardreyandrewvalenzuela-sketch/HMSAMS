@@ -282,6 +282,46 @@ function renderFeed(records) {
     return new Date(b['Time In']) - new Date(a['Time In']);
   });
 
+  var present = 0;
+
+var late = 0;
+
+var timeout = 0;
+
+  records.forEach(function(r){
+
+    if(r["Time Out"]){
+
+        timeout++;
+
+    }
+
+    else if(r["Attendance Status"] == CONFIG.STATUS.LATE){
+
+        late++;
+
+    }
+
+    else{
+
+        present++;
+
+    }
+
+});
+
+  document.getElementById("stat-present").textContent =
+    present;
+
+document.getElementById("stat-late").textContent =
+    late;
+
+document.getElementById("stat-timeout").textContent =
+    timeout;
+
+document.getElementById("stat-total").textContent =
+    records.length;
+
   tbody.innerHTML = records.map(function(r) {
     return '<tr>' +
       '<td>' + (r['Full Name'] || r['Student No']) + '</td>' +
@@ -492,6 +532,7 @@ function closeCamera() {
 
 }
 
+}
   function updateRecentScans(res){
 
     if(!res.success) return;
@@ -523,7 +564,5 @@ function closeCamera() {
 
     document.getElementById("recent-scans-list").innerHTML =
         html;
-
-}
 
 }
