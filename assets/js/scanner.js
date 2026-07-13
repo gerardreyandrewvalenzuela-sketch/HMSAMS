@@ -235,6 +235,10 @@ function showScanResult(res) {
 
   el.style.display = 'block';
 
+  if (navigator.vibrate && res.success) {
+    navigator.vibrate(80);
+}
+
   // Auto-hide faster for continuous scanning flow (was 10s, now 6s)
   clearTimeout(el._hideTimer);
   el._hideTimer = setTimeout(function() {
@@ -392,7 +396,7 @@ finally {
       
         _lastProcessedParams = '';
 
-    }, 400);
+    }, 1500);
 
 }
 
