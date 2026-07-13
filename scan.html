@@ -81,7 +81,30 @@
       </div>
       <span class="badge badge--active" id="event-status-badge" style="display:none;">ACTIVE</span>
     </div>
+<!-- Live Statistics -->
+<div class="scanner-stats">
 
+  <div class="scanner-stat-card">
+    <div class="scanner-stat-number" id="stat-present">0</div>
+    <div class="scanner-stat-label">Present</div>
+  </div>
+
+  <div class="scanner-stat-card">
+    <div class="scanner-stat-number" id="stat-late">0</div>
+    <div class="scanner-stat-label">Late</div>
+  </div>
+
+  <div class="scanner-stat-card">
+    <div class="scanner-stat-number" id="stat-timeout">0</div>
+    <div class="scanner-stat-label">Time Out</div>
+  </div>
+
+  <div class="scanner-stat-card">
+    <div class="scanner-stat-number" id="stat-total">0</div>
+    <div class="scanner-stat-label">Total</div>
+  </div>
+
+</div>
     <!-- No Active Event Warning -->
     <div class="alert alert--warning" id="no-event-warning" style="display:none;">
       <i class="fa-solid fa-triangle-exclamation"></i>
