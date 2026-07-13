@@ -351,39 +351,19 @@ async function processQrScan(qrData) {
 
     try {
 
-        var studentNo = '';
-        var fullName = '';
-        var eventId = '';
+var studentNo = qrData.trim();
 
-        // Try to parse as URL first
-        try {
+if (studentNo.indexOf("SID:") === 0) {
+    studentNo = studentNo.substring(4);
+}
 
-            var url = new URL(qrData, window.location.origin);
+var fullName = "";
+var eventId = "";
 
-            studentNo = url.searchParams.get('id') || '';
-            fullName  = url.searchParams.get('name') || '';
-            eventId   = url.searchParams.get('event') || '';
-
-        } catch(e) {
-
-            if (qrData.indexOf('id=') !== -1) {
-
-                var idMatch    = qrData.match(/[?&]id=([^&]+)/);
-                var nameMatch  = qrData.match(/[?&]name=([^&]+)/);
-                var eventMatch = qrData.match(/[?&]event=([^&]+)/);
-
-                if (idMatch) studentNo = decodeURIComponent(idMatch[1]);
-                if (nameMatch) fullName = decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ');
-                if (eventMatch) eventId = decodeURIComponent(eventMatch[1]);
-
-            }
-
-        }
-
-        if (!studentNo) {
-            console.warn('No student ID found in QR:', qrData);
-            return;
-        }
+if (!studentNo) {
+    console.warn("Invalid QR");
+    return;
+}
 
         var scanStr = studentNo + "|" + fullName + "|" + eventId;
 
