@@ -821,3 +821,47 @@ img { max-width: 100%; }
 @media (min-width: 640px) {
   .stats-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+.scanner-stats{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:12px;
+
+    margin:20px 0;
+
+}
+
+.scanner-stat-card{
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:16px;
+
+    text-align:center;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+
+}
+
+.scanner-stat-number{
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    color:#1e88e5;
+
+}
+
+.scanner-stat-label{
+
+    font-size:14px;
+
+    color:#666;
+
+}
