@@ -235,3 +235,9 @@ function statusBadge(status) {
   var cls = map[status] || 'inactive';
   return '<span class="badge badge--' + cls + '">' + (status || '—') + '</span>';
 }
+
+async function getAttendanceReport() {
+
+    return callApi("apiGetAttendanceReport");
+
+}
