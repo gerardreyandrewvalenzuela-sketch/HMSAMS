@@ -3,7 +3,6 @@
 // ============================================================
 
 // Base URL for QR scan links
-var QR_BASE_URL = 'https://gerardreyandrewvalenzuela-sketch.github.io/HMSAMS/scan.html';
 
 var _allStudents = [];
 
@@ -100,10 +99,8 @@ function buildQRItem(student) {
   ) + ' Year' : '';
   var block = student['Block'] ? 'Block ' + student['Block'] : '';
 
-  // Build the QR scan URL
-  var url = QR_BASE_URL +
-    '?id='   + encodeURIComponent(studentNo) +
-    '&name=' + encodeURIComponent(fullName);
+// QR now contains only the student number
+  var qrData = studentNo;
 
   // Build ID card container
   var item = document.createElement('div');
@@ -128,7 +125,7 @@ function buildQRItem(student) {
   // Generate QR code
   try {
     new QRCode(qrDiv, {
-      text:         url,
+      text:         qrData,
       width:        90,
       height:       90,
       colorDark:    '#1e293b',
