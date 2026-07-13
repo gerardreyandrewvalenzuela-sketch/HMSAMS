@@ -9,6 +9,7 @@ var _isScanProcessing = false;  // Prevent duplicate rapid scans
 var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 var _cameraStream = null;        // Track active camera stream
 var _scannerActive = false;      // Track if scanner is running
+var _recentScans = [];
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,6 +21,12 @@ async function onPinUnlocked() {
 
   // Load active event info
   await loadActiveEvent();
+
+  if (_activeEvent) {
+
+    initializeCamera();
+
+}
 
   // Check for scan params in URL (student scanned their QR)
   checkAndProcessScanParams();
@@ -234,6 +241,7 @@ function showScanResult(res) {
   metaEl.textContent = metaText;
 
   el.style.display = 'block';
+  playSound(res.status);
 
   if (navigator.vibrate && res.success) {
     navigator.vibrate(80);
@@ -330,6 +338,21 @@ async function initializeCamera() {
 
        status.textContent = "✅ Camera ready — point at QR code";
 
+      if ("wakeLock" in navigator) {
+
+    try {
+
+        window._wakeLock =
+            await navigator.wakeLock.request("screen");
+
+    } catch(e){
+
+        console.log(e);
+
+    }
+
+}
+
     } catch (e) {
 
         status.textContent = "❌ " + e.message;
@@ -402,7 +425,30 @@ finally {
 
 }
    
+function playSound(status) {
 
+    var sound;
+
+    switch (status) {
+
+        case CONFIG.STATUS.TIME_IN:
+        case CONFIG.STATUS.LATE:
+            sound = new Audio("assets/sounds/success.mp3");
+            break;
+
+        case CONFIG.STATUS.TIME_OUT:
+            sound = new Audio("assets/sounds/timeout.mp3");
+            break;
+
+        default:
+            sound = new Audio("assets/sounds/error.mp3");
+    }
+
+    sound.volume = 0.6;
+
+    sound.play().catch(function(){});
+
+}
 
 /**
  * Close camera and cleanup
@@ -435,5 +481,13 @@ function closeCamera() {
 
     document.getElementById("scanner-status").textContent =
         "Camera stopped";
+  
+  if (window._wakeLock) {
+
+    window._wakeLock.release();
+
+    window._wakeLock = null;
+
+}
 
 }
