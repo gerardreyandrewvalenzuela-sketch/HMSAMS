@@ -143,6 +143,7 @@ async function handleQrScan(studentNo, studentName, eventId) {
   try {
     var res = await processScan(studentNo, studentName, eid);
     showScanResult(res);
+    updateRecentScans(res);
     if (res.success) loadLiveFeed();
   } catch(err) {
     showScanResult({ success: false, status: 'error', message: 'Connection error. Try again.' });
@@ -178,6 +179,7 @@ async function handleManualEntry() {
   try {
     var res = await processScan(studentNo, studentName, _activeEvent['Event ID']);
     showScanResult(res);
+    updateRecentScans(res);
     if (res.success) {
       document.getElementById('manual-student-no').value   = '';
       document.getElementById('manual-student-name').value = '';
@@ -487,6 +489,40 @@ function closeCamera() {
     window._wakeLock.release();
 
     window._wakeLock = null;
+
+}
+
+  function updateRecentScans(res){
+
+    if(!res.success) return;
+
+    _recentScans.unshift({
+
+        name: res.student,
+
+        status: res.status,
+
+        time: res.time
+
+    });
+
+    _recentScans = _recentScans.slice(0,5);
+
+    var html="";
+
+    _recentScans.forEach(function(s){
+
+        html +=
+        "<li>" +
+        s.name +
+        " - " +
+        s.status +
+        "</li>";
+
+    });
+
+    document.getElementById("recent-scans-list").innerHTML =
+        html;
 
 }
 
