@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMSAMS — Reports</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
 
+  <!-- Top Nav -->
+  <header class="top-bar">
+    <div class="top-bar__brand">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>HMSAMS</span>
+    </div>
+    <span class="top-bar__subtitle">Hospitality Management Society</span>
+  </header>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    <h1 class="page-title">Reports</h1>
+
+<p class="page-subtitle">
+Generate attendance reports and summaries.
+</p>
+
+    <div class="card">
+
+    <h3>
+        <i class="fa-solid fa-filter"></i>
+        Report Filters
+    </h3>
+
+    <label>Event</label>
+
+    <select id="report-event" class="input">
+        <option value="">Loading events...</option>
+    </select>
+
+      <br><br>
+
+    <label>Year Level</label>
+
+    <select id="report-year" class="input">
+        <option value="">All Years</option>
+    </select>
+
+     <br><br> 
+
+    <label>Block</label>
+
+    <select id="report-block" class="input">
+        <option value="">All Blocks</option>
+    </select>
+
+      <br><br>
+
+</div>
+
+    <div class="card">
+
+    <h3>
+        <i class="fa-solid fa-file-lines"></i>
+        Attendance Report
+    </h3>
+
+    <p>
+        Generate a complete attendance list for the selected filters.
+    </p>
+
+    <button
+        id="btn-attendance-report"
+        class="btn btn--primary btn--full">
+
+        Generate Report
+
+    </button>
+
+</div>
+
+    <div class="card">
+
+    <h3>
+        <i class="fa-solid fa-chart-column"></i>
+        Summary Report
+    </h3>
+
+    <p>
+        Generate attendance summary by Year Level and Block.
+    </p>
+
+    <button
+        id="btn-summary-report"
+        class="btn btn--secondary btn--full">
+
+        Generate Summary
+
+    </button>
+
+</div>
+
+    <div class="card">
+
+    <h3>
+        <i class="fa-solid fa-user-clock"></i>
+        Student Attendance History
+    </h3>
+
+    <p>
+        Generate each student's attendance history.
+    </p>
+
+    <button
+        id="btn-history-report"
+        class="btn btn--outline btn--full">
+
+        Generate History
+
+    </button>
+
+</div>
+
+  </main>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+<a href="dashboard.html" class="bottom-nav__item">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+</a>
+    <a href="scan.html" class="bottom-nav__item">
+      <i class="fa-solid fa-qrcode"></i><span>Scan</span>
+    </a>
+    <a href="events.html" class="bottom-nav__item">
+      <i class="fa-solid fa-calendar"></i><span>Events</span>
+    </a>
+    <a href="students.html" class="bottom-nav__item">
+      <i class="fa-solid fa-users"></i><span>Students</span>
+    </a>
+<a href="reports.html" class="bottom-nav__item bottom-nav__item--active">
+    <i class="fa-solid fa-file-lines"></i>
+    <span>Reports</span>
+</a>
+  </nav>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/reports.js"></script>
+</body>
+</html>
