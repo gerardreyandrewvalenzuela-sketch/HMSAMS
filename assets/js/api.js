@@ -60,8 +60,13 @@ async function apiPost(action, body) {
     }
   });
 
-  var res = await fetch(url.toString());
-  return res.json();
+var res = await fetch(url.toString());
+
+var text = await res.text();
+
+console.log(text);
+
+return JSON.parse(text);
 }
 
 // ── PIN ──────────────────────────────────────────────────────
