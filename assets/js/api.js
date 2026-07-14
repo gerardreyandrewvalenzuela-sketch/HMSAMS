@@ -144,7 +144,7 @@ async function requestAttendanceReport(filters) {
 
 }
 
-async function requestAttendanceReport(filters) {
+async function requestSummaryReport(filters) {
 
     return apiPost(
         "generateSummaryReport",
@@ -155,7 +155,7 @@ async function requestAttendanceReport(filters) {
 
 }
 
-async function requestAttendanceReport(filters) {
+async function requestHistoryReport(filters) {
 
     return apiPost(
         "generateHistoryReport",
