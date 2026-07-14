@@ -9,8 +9,9 @@ var EVENT_COLS = {
   DATE:             2,
   REG_OPEN:         3,
   REG_CLOSE:        4,
-  TIMEOUT_DEADLINE: 5,
-  STATUS:           6
+  TIMEOUT_START:    5,
+  TIMEOUT_DEADLINE: 6,
+  STATUS:           7
 };
 
 function generateEventId() {
@@ -36,17 +37,25 @@ function getActiveEvent() {
 }
 
 function addEvent(data) {
+  Logger.log(JSON.stringify(data));
+
   var eventId = generateEventId();
+
   appendRow(CONFIG.SHEETS.EVENTS, [
     eventId,
     data.eventName,
     data.date,
     data.regOpen,
     data.regClose,
+    data.timeoutStart,
     data.timeoutDeadline,
     CONFIG.EVENT_STATUS.INACTIVE
   ]);
-  return { success: true, message: 'Event created.', eventId: eventId };
+
+  return {
+    success: true,
+    eventId: eventId
+  };
 }
 
 function updateEvent(eventId, data) {
@@ -54,15 +63,16 @@ function updateEvent(eventId, data) {
   if (rowIndex === -1) {
     return { success: false, message: 'Event not found.' };
   }
-  updateRow(CONFIG.SHEETS.EVENTS, rowIndex, [
-    eventId,
-    data.eventName,
-    data.date,
-    data.regOpen,
-    data.regClose,
-    data.timeoutDeadline,
-    data.status
-  ]);
+updateRow(CONFIG.SHEETS.EVENTS, rowIndex, [
+  eventId,
+  data.eventName,
+  data.date,
+  data.regOpen,
+  data.regClose,
+  data.timeoutStart,
+  data.timeoutDeadline,
+  data.status
+]);
   return { success: true, message: 'Event updated.' };
 }
 
