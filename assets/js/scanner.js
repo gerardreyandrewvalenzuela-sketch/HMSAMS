@@ -173,11 +173,19 @@ async function handleQrScan(studentNo, studentName, eventId) {
     showScanResult(res);
     updateRecentScans(res);
     if (res.success) loadLiveFeed();
-  } catch(err) {
-    showScanResult({ success: false, status: 'error', message: 'Connection error. Try again.' });
-  }
-}
+catch(err) {
 
+    console.error(err);
+
+    alert(err.message);
+
+    showScanResult({
+        success:false,
+        status:'error',
+        message: err.message
+    });
+
+}
 // ── Manual Entry ─────────────────────────────────────────────
 async function handleManualEntry() {
   var studentNo   = document.getElementById('manual-student-no').value.trim();
