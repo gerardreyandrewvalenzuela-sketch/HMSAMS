@@ -336,12 +336,17 @@ var timeout = 0;
 
 });
 
- var el = document.getElementById("stat-present") if (el) el.textContent = present;
+var el = document.getElementById("stat-present");
+if (el) el.textContent = present;
 
- var el = document.getElementById("stat-late") if (el) el.textContent = late;
- var el = document.getElementById("stat-timeout") if (el) el.textContent = timeout;
+el = document.getElementById("stat-late");
+if (el) el.textContent = late;
 
- var el = document.getElementById("stat-total"). if (el) el.textContent = total;
+el = document.getElementById("stat-timeout");
+if (el) el.textContent = timeout;
+
+el = document.getElementById("stat-total");
+if (el) el.textContent = records.length;
 
   tbody.innerHTML = records.map(function(r) {
     return '<tr>' +
