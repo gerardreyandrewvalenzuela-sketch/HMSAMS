@@ -585,5 +585,3 @@ function closeCamera() {
         html;
 
 }
-
-}
