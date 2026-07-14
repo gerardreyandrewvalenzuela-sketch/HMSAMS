@@ -8,10 +8,11 @@ var CONFIG = {
   BASE_URL: 'https://gerardreyandrewvalenzuela-sketch.github.io/HMSAMS',
 
   SHEETS: {
-    STUDENTS:   'Students',
-    EVENTS:     'Events',
-    ATTENDANCE: 'Attendance'
-  },
+  STUDENTS: 'Students',
+  EVENTS: 'Events',
+  ATTENDANCE: 'Attendance',
+  ATTENDANCE_REPORT: 'Attendance Report'
+},
 
   // Attendance status values
   STATUS: {
@@ -34,4 +35,6 @@ var CONFIG = {
     ACTIVE:   'Active',
     INACTIVE: 'Inactive'
   }
+
+  
 };
