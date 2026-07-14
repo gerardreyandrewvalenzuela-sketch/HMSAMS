@@ -131,6 +131,41 @@ async function getDashboardStats() {
   return apiGet('getDashboardStats');
 }
 
+// ── Reports ─────────────────────────────────────────────────
+
+async function generateAttendanceReport(filters) {
+
+    return apiPost(
+        "generateAttendanceReport",
+        {
+            data: filters
+        }
+    );
+
+}
+
+async function generateSummaryReport(filters) {
+
+    return apiPost(
+        "generateSummaryReport",
+        {
+            data: filters
+        }
+    );
+
+}
+
+async function generateHistoryReport(filters) {
+
+    return apiPost(
+        "generateHistoryReport",
+        {
+            data: filters
+        }
+    );
+
+}
+
 // ── Init ─────────────────────────────────────────────────────
 async function initSheets() {
   return apiGet('init');
