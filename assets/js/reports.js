@@ -178,7 +178,70 @@ function bindButtons() {
 
 async function generateAttendanceReport() {
 
-    showToast("Attendance Report is not implemented yet.", "warning");
+    var filters = {
+
+        eventId:
+            document.getElementById("report-event").value,
+
+        year:
+            document.getElementById("report-year").value,
+
+        block:
+            document.getElementById("report-block").value
+
+    };
+
+    try {
+
+        var btn =
+            document.getElementById("btn-attendance-report");
+
+        btn.disabled = true;
+
+        btn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+
+        var res =
+            await window.requestAttendanceReport(filters);
+
+        if (res.success) {
+
+            showToast(
+                res.message,
+                "success"
+            );
+
+        }
+        else {
+
+            showToast(
+                res.message,
+                "error"
+            );
+
+        }
+
+    }
+
+    catch(err) {
+
+        console.error(err);
+
+        showToast(
+            "Unable to generate report.",
+            "error"
+        );
+
+    }
+
+    finally {
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+            "Generate Report";
+
+    }
 
 }
 
