@@ -18,20 +18,21 @@ function playSound(status){
 
     var sound;
 
-    switch(status){
+switch(status){
 
-        case CONFIG.STATUS.TIME_IN:
-        case CONFIG.STATUS.LATE:
-            sound = SOUND_SUCCESS;
-            break;
+    case "Time In":
+    case "Late":
+        sound = SOUND_SUCCESS;
+        break;
 
-        case CONFIG.STATUS.TIME_OUT:
-            sound = SOUND_TIMEOUT;
-            break;
+    case "Time Out":
+        sound = SOUND_TIMEOUT;
+        break;
 
-        default:
-            sound = SOUND_ERROR;
-    }
+    default:
+        sound = SOUND_ERROR;
+
+}
 
     sound.currentTime = 0;
     sound.play().catch(function(){});
@@ -315,21 +316,19 @@ var late = 0;
 
 var timeout = 0;
 
-  records.forEach(function(r){
+ records.forEach(function(r){
 
-    if(r["Time Out"]){
+    if (r["Time Out"]) {
 
         timeout++;
 
     }
+    else if (r["Attendance Status"] == "Late") {
 
-   else if (r["Attendance Status"] == "Late") {
-    late++;
-}
+        late++;
 
     }
-
-    else{
+    else {
 
         present++;
 
@@ -337,17 +336,12 @@ var timeout = 0;
 
 });
 
-  document.getElementById("stat-present").textContent =
-    present;
+ var el = document.getElementById("stat-present") if (el) el.textContent = present;
 
-document.getElementById("stat-late").textContent =
-    late;
+ var el = document.getElementById("stat-late") if (el) el.textContent = late;
+ var el = document.getElementById("stat-timeout") if (el) el.textContent = timeout;
 
-document.getElementById("stat-timeout").textContent =
-    timeout;
-
-document.getElementById("stat-total").textContent =
-    records.length;
+ var el = document.getElementById("stat-total"). if (el) el.textContent = total;
 
   tbody.innerHTML = records.map(function(r) {
     return '<tr>' +
@@ -382,6 +376,8 @@ async function initializeCamera() {
 
     scanner.style.display = "block";
     status.textContent = "Starting camera...";
+
+    if (_scannerActive) return;
 
     _scannerActive = true;
 
@@ -494,30 +490,6 @@ finally {
 
 }
    
-function playSound(status) {
-
-    var sound;
-
-    switch (status) {
-
-        case CONFIG.STATUS.TIME_IN:
-        case CONFIG.STATUS.LATE:
-            sound = new Audio("assets/sounds/success.mp3");
-            break;
-
-        case CONFIG.STATUS.TIME_OUT:
-            sound = new Audio("assets/sounds/timeout.mp3");
-            break;
-
-        default:
-            sound = new Audio("assets/sounds/error.mp3");
-    }
-
-    sound.volume = 0.6;
-
-    sound.play().catch(function(){});
-
-}
 
 /**
  * Close camera and cleanup
