@@ -1,202 +1,118 @@
-// ============================================================
-// Code.gs — Main Web App entry point (doGet / doPost router)
-// ============================================================
+function rebuildAnalyticsDashboard() {
 
-function doGet(e) {
-  var params = e.parameter;
-  var action = params.action || '';
+  var sheet = getSheet("Analytics Dashboard");
+  sheet.clear();
 
-  // Handle QR scan redirect (student scans their QR code)
-  if (action === 'scan') {
-    var studentNo = params.id   || '';
-    var fullName  = params.name || '';
-    var eventId   = params.event || '';
+  var students = getAllRows(CONFIG.SHEETS.STUDENTS);
+  var attendance = getAllRows(CONFIG.SHEETS.ATTENDANCE);
+  var events = getAllRows(CONFIG.SHEETS.EVENTS);
 
-    if (!eventId) {
-      var activeEvent = getActiveEvent();
-      if (activeEvent) {
-        eventId = activeEvent['Event ID'];
-      }
+  var activeStudents = students.filter(function(s){
+    return s.Status == CONFIG.STUDENT_STATUS.ACTIVE;
+  }).length;
+
+  var totalEvents = events.length;
+
+  var totalAttendance = attendance.length;
+
+  var timeIn = 0;
+  var late = 0;
+  var timeout = 0;
+  var noTimeout = 0;
+
+  var studentMap = {};
+
+students.forEach(function(s){
+    studentMap[String(s["Student No"])] = s;
+});
+
+  attendance.forEach(function(a){
+
+    if(a["Time Out"]){
+      timeout++;
+    }
+    else if(a.Status == CONFIG.STATUS.TIME_IN){
+      timeIn++;
+    }
+    else if(a.Status == CONFIG.STATUS.LATE){
+      late++;
+    }
+    else if(a.Status == CONFIG.STATUS.NO_TIMEOUT){
+      noTimeout++;
     }
 
-    var result = processScan(studentNo, fullName, eventId);
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  });
 
-  // PIN-protected write actions sent as GET
-  var writeActions = [
-    'addStudent','updateStudent','removeStudent','setStudentStatus',
-    'addEvent','updateEvent','setEventStatus','deleteEvent',
-    'processScan','autoMarkNoTimeout'
-  ];
+  sheet.getRange("A1").setValue("ATTENDANCE ANALYTICS DASHBOARD");
+  sheet.getRange("A1").setFontWeight("bold").setFontSize(18);
 
-  if (writeActions.indexOf(action) !== -1) {
-    // Verify PIN
-    if (params.pin !== CONFIG.PIN) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: false, message: 'Invalid PIN.' }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    try {
-      // Rebuild body from params, parse JSON fields
-      var body = {};
-      Object.keys(params).forEach(function(k) {
-        try { body[k] = JSON.parse(params[k]); }
-        catch(ex) { body[k] = params[k]; }
-      });
-      var result = routePost(action, body);
-      return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch(err) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: false, message: err.message }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
+  sheet.getRange("A3").setValue("Active Students");
+  sheet.getRange("B3").setValue(activeStudents);
 
-  // Read-only GET actions
-  try {
-    var result = routeGet(action, params);
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, message: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
+  sheet.getRange("A4").setValue("Events");
+  sheet.getRange("B4").setValue(totalEvents);
 
-function doPost(e) {
-  try {
-    var body   = JSON.parse(e.postData.contents);
-    var action = body.action || '';
+  sheet.getRange("A5").setValue("Attendance Records");
+  sheet.getRange("B5").setValue(totalAttendance);
 
-    // PIN verification for write operations
-    if (body.pin !== CONFIG.PIN) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: false, message: 'Invalid PIN.' }))
-        .setMimeType(ContentService.MimeType.JSON);
+  sheet.getRange("A7").setValue("Time In");
+  sheet.getRange("B7").setValue(timeIn);
+
+  sheet.getRange("A8").setValue("Late");
+  sheet.getRange("B8").setValue(late);
+
+  sheet.getRange("A9").setValue("Time Out");
+  sheet.getRange("B9").setValue(timeout);
+
+  sheet.getRange("A10").setValue("No Timeout");
+  sheet.getRange("B10").setValue(noTimeout);
+var yearStats = {};
+
+students.forEach(function(s){
+
+    if(s.Status != CONFIG.STUDENT_STATUS.ACTIVE) return;
+
+    if(!yearStats[s["Year Level"]]){
+
+        yearStats[s["Year Level"]] = {
+            total:0,
+            attended:0
+        };
+
     }
 
-    var result = routePost(action, body);
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, message: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+    yearStats[s["Year Level"]].total++;
+
+});
+
+attendance.forEach(function(a){
+
+var student = studentMap[String(a["Student No"])];
+
+    if(!student) return;
+
+    yearStats[student["Year Level"]].attended++;
+
+});
+
+sheet.getRange("D2").setValue("Attendance by Year");
+
+var row = 3;
+
+Object.keys(yearStats).sort().forEach(function(year){
+
+    var y = yearStats[year];
+
+    var percent = y.total
+        ? ((y.attended / y.total) * 100).toFixed(1) + "%"
+        : "0%";
+
+    sheet.getRange(row,4).setValue(year);
+    sheet.getRange(row,5).setValue(percent);
+
+    row++;
+
+});
+
 }
 
-// ── GET Router ──────────────────────────────────────────────
-function routeGet(action, params) {
-  switch(action) {
-
-    // Students
-    case 'getStudents':
-      return { success: true, data: getAllStudents() };
-
-    // Events
-    case 'getEvents':
-      return { success: true, data: getAllEvents() };
-
-    case 'getActiveEvent':
-      return { success: true, data: getActiveEvent() };
-
-    // Attendance
-    case 'getEventAttendance':
-      return { success: true, data: getEventAttendance(params.eventId) };
-
-    // Dashboard
-    case 'getDashboardStats':
-      return { success: true, data: getDashboardStats() };
-
-    // Setup
-    case 'init':
-      return initializeSheets();
-
-    // PIN verification (GET-based, no sensitive write)
-    case 'verifyPin':
-      return { success: params.pin === CONFIG.PIN };
-
-    default:
-      return { success: false, message: 'Unknown action: ' + action };
-  }
-}
-
-// ── POST Router ─────────────────────────────────────────────
-function routePost(action, body) {
-  switch(action) {
-
-    // Students
-    case 'addStudent':
-      return addStudent({
-        studentNo:  body.studentNo  || body['data.studentNo'],
-        lastName:   body.lastName   || body['data.lastName'],
-        firstName:  body.firstName  || body['data.firstName'],
-        middleName: body.middleName || body['data.middleName'] || '',
-        yearLevel:  body.yearLevel  || body['data.yearLevel'],
-        block:      body.block      || body['data.block'],
-        status:     body.status     || body['data.status'] || 'Active'
-      });
-
-    case 'updateStudent':
-      return updateStudent(body.studentNo, {
-        studentNo:  body.studentNo,
-        lastName:   body.lastName,
-        firstName:  body.firstName,
-        middleName: body.middleName || '',
-        yearLevel:  body.yearLevel,
-        block:      body.block,
-        status:     body.status
-      });
-
-    case 'removeStudent':
-      return removeStudent(body.studentNo);
-
-    case 'setStudentStatus':
-      return setStudentStatus(body.studentNo, body.status);
-
-    // Events
-    case 'addEvent':
-      return addEvent({
-        eventName:       body.eventName,
-        date:            body.date,
-        regOpen:         body.regOpen,
-        regClose:        body.regClose,
-        timeoutDeadline: body.timeoutDeadline,
-        status:          body.status || 'Inactive'
-      });
-
-    case 'updateEvent':
-      return updateEvent(body.eventId, {
-        eventName:       body.eventName,
-        date:            body.date,
-        regOpen:         body.regOpen,
-        regClose:        body.regClose,
-        timeoutDeadline: body.timeoutDeadline,
-        status:          body.status
-      });
-
-    case 'setEventStatus':
-      return setEventStatus(body.eventId, body.status);
-
-    case 'deleteEvent':
-      return deleteEvent(body.eventId);
-
-    // Attendance
-    case 'processScan':
-      return processScan(body.studentNo, body.fullName, body.eventId);
-
-    case 'autoMarkNoTimeout':
-      return autoMarkNoTimeout();
-
-    default:
-      return { success: false, message: 'Unknown action: ' + action };
-  }
-}
