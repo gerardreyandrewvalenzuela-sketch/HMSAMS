@@ -191,6 +191,8 @@ catch(err) {
     });
 
 }
+
+}
 // ── Manual Entry ─────────────────────────────────────────────
 async function handleManualEntry() {
   var studentNo   = document.getElementById('manual-student-no').value.trim();
