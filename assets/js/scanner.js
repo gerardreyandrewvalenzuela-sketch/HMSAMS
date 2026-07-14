@@ -168,21 +168,26 @@ async function handleQrScan(studentNo, studentName, eventId) {
 
   var eid = eventId || (_activeEvent ? _activeEvent['Event ID'] : '');
 
-  try {
+try {
+
     var res = await processScan(studentNo, studentName, eid);
+
     showScanResult(res);
     updateRecentScans(res);
-    if (res.success) loadLiveFeed();
+
+    if (res.success) {
+        loadLiveFeed();
+    }
+
+}
 catch(err) {
 
     console.error(err);
 
-    alert(err.message);
-
     showScanResult({
         success:false,
-        status:'error',
-        message: err.message
+        status:"error",
+        message:err.message
     });
 
 }
