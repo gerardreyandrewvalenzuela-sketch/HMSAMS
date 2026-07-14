@@ -85,7 +85,7 @@ function initializeSheets() {
     eventsSheet = ss.insertSheet(CONFIG.SHEETS.EVENTS);
     eventsSheet.appendRow([
       'Event ID', 'Event Name', 'Date', 'Reg Open',
-      'Reg Close', 'Timeout Deadline', 'Status'
+      'Reg Close', 'Timeout Start', 'Timeout Deadline', 'Status'
     ]);
     eventsSheet.setFrozenRows(1);
   }
