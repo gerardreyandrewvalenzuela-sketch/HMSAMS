@@ -133,7 +133,7 @@ async function getDashboardStats() {
 
 // ── Reports ─────────────────────────────────────────────────
 
-async function generateAttendanceReport(filters) {
+async function requestAttendanceReport(filters) {
 
     return apiPost(
         "generateAttendanceReport",
@@ -144,7 +144,7 @@ async function generateAttendanceReport(filters) {
 
 }
 
-async function generateSummaryReport(filters) {
+async function requestAttendanceReport(filters) {
 
     return apiPost(
         "generateSummaryReport",
@@ -155,7 +155,7 @@ async function generateSummaryReport(filters) {
 
 }
 
-async function generateHistoryReport(filters) {
+async function requestAttendanceReport(filters) {
 
     return apiPost(
         "generateHistoryReport",
