@@ -10,9 +10,9 @@ var _lastProcessedParams = '';  // Track last scan to prevent duplicates
 var _cameraStream = null;        // Track active camera stream
 var _scannerActive = false;      // Track if scanner is running
 var _recentScans = [];
-var SOUND_SUCCESS = new Audio("assets/sounds/success.mp3");
-var SOUND_TIMEOUT = new Audio("assets/sounds/timeout.mp3");
-var SOUND_ERROR = new Audio("assets/sounds/error.mp3");
+var SOUND_SUCCESS = new Audio("assets/js/sounds/success.mp3");
+var SOUND_TIMEOUT = new Audio("assets/js/sounds/timeout.mp3");
+var SOUND_ERROR = new Audio("assets/js/sounds/error.mp3");
 
 function playSound(status){
 
@@ -323,9 +323,9 @@ var timeout = 0;
 
     }
 
-    else if(r["Attendance Status"] == CONFIG.STATUS.LATE){
-
-        late++;
+   else if (r["Attendance Status"] == "Late") {
+    late++;
+}
 
     }
 
