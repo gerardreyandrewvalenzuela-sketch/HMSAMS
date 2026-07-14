@@ -584,4 +584,6 @@ function closeCamera() {
     document.getElementById("recent-scans-list").innerHTML =
         html;
 
-});
+}
+
+}
